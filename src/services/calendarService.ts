@@ -12,6 +12,7 @@ import {
 import { db } from '../config/firebase';
 import { CalendarEvent } from '../types';
 import { historyService } from './historyService';
+import { notificationService } from './notificationService';
 import { expandPattern } from '../utils/patternExpander';
 
 export const calendarService = {
@@ -27,6 +28,7 @@ export const calendarService = {
     requiresApproval: boolean;
     isPattern?: boolean;
     patternRule?: string;
+    memberUids?: string[];
   }): Promise<CalendarEvent> {
     const eventRef = doc(collection(db, 'calendarEvents'));
     const expiresAt = data.requiresApproval ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : undefined;
@@ -68,6 +70,21 @@ export const calendarService = {
       'calendar',
       eventRef.id
     );
+
+    if (data.requiresApproval && data.memberUids) {
+      const recipientUid = data.memberUids.find((uid) => uid !== data.createdBy);
+      if (recipientUid) {
+        await notificationService.send({
+          agreementId: data.agreementId,
+          recipientUid,
+          type: 'approval_request',
+          title: 'Solicitud de aprobación',
+          body: `${data.createdByName} ha creado el evento "${data.title}" y necesita tu aprobación`,
+          entityType: 'calendar',
+          entityId: eventRef.id,
+        });
+      }
+    }
 
     return event;
   },
@@ -171,6 +188,16 @@ export const calendarService = {
       'calendar',
       id
     );
+
+    await notificationService.send({
+      agreementId: event.agreementId,
+      recipientUid: event.createdBy,
+      type: 'approval_response',
+      title: approved ? 'Evento aprobado' : 'Evento rechazado',
+      body: `${userName} ha ${approved ? 'aprobado' : 'rechazado'} el evento "${event.title}"${reason ? `: ${reason}` : ''}`,
+      entityType: 'calendar',
+      entityId: id,
+    });
   },
 
   async getPendingApprovals(

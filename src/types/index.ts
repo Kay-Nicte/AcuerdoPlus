@@ -142,6 +142,20 @@ export interface PatternRule {
   endDate?: string; // ISO date, optional end boundary
 }
 
+// Tipos de notificación in-app
+export interface AppNotification {
+  id: string;
+  agreementId: string;
+  recipientUid: string;
+  type: 'approval_request' | 'approval_response' | 'new_message' | 'maintenance_reminder' | 'authorization_request';
+  title: string;
+  body: string;
+  read: boolean;
+  entityType: 'expense' | 'maintenance' | 'calendar' | 'authorization' | 'chat';
+  entityId: string;
+  createdAt: Date;
+}
+
 // Tipos de suscripción
 export interface Subscription {
   agreementId: string;
