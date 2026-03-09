@@ -7,12 +7,12 @@ import { getStorage } from 'firebase/storage';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAIuZ8H3YZrk5u4EGypmVoE_YI72y899Do",
-  authDomain: "acuerdo-plus.firebaseapp.com",
-  projectId: "acuerdo-plus",
-  storageBucket: "acuerdo-plus.firebasestorage.app",
-  messagingSenderId: "83831683899",
-  appId: "1:83831683899:web:3686c44d71edfb5eb0551e"
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase

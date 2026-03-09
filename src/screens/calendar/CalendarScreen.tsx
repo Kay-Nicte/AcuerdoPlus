@@ -204,52 +204,54 @@ const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           selectedDayBackgroundColor: COLORS.primary,
         }}
       />
-      {/* Minor filter tabs */}
-      {minors.length > 1 && (
-        <View style={styles.minorTabs}>
-          <TouchableOpacity
-            style={[styles.minorTab, selectedMinorId === null && styles.minorTabActive]}
-            onPress={() => handleMinorFilter(null)}
-          >
-            <Text style={[styles.minorTabText, selectedMinorId === null && styles.minorTabTextActive]}>
-              {t('calendar.general')}
-            </Text>
-          </TouchableOpacity>
-          {minors.map((m) => (
+      {/* Combined bar: minor filter + color legend */}
+      <View style={styles.toolBar}>
+        {/* Minor filter */}
+        {minors.length > 1 && (
+          <View style={styles.minorTabs}>
             <TouchableOpacity
-              key={m.id}
-              style={[styles.minorTab, selectedMinorId === m.id && styles.minorTabActive]}
-              onPress={() => handleMinorFilter(m.id)}
+              style={[styles.minorTab, selectedMinorId === null && styles.minorTabActive]}
+              onPress={() => handleMinorFilter(null)}
             >
-              <Text style={[styles.minorTabText, selectedMinorId === m.id && styles.minorTabTextActive]}>
-                {m.name}
+              <Text style={[styles.minorTabText, selectedMinorId === null && styles.minorTabTextActive]}>
+                {t('calendar.general')}
               </Text>
             </TouchableOpacity>
-          ))}
-        </View>
-      )}
-      {/* Color legend / picker */}
-      {currentAgreement && currentAgreement.members.length > 0 && (
-        <View style={styles.legendBar}>
-          {currentAgreement.members.map((uid) => {
-            const color = getMemberColor(uid);
-            const isMe = uid === userData?.uid;
-            const name = memberNames[uid] || '';
-            return (
+            {minors.map((m) => (
               <TouchableOpacity
-                key={uid}
-                style={styles.legendItem}
-                onPress={() => isMe && setShowColorPicker(!showColorPicker)}
-                activeOpacity={isMe ? 0.6 : 1}
+                key={m.id}
+                style={[styles.minorTab, selectedMinorId === m.id && styles.minorTabActive]}
+                onPress={() => handleMinorFilter(m.id)}
               >
-                <View style={[styles.legendDot, { backgroundColor: color }]} />
-                <Text style={styles.legendName} numberOfLines={1}>{name}</Text>
-                {isMe && <Ionicons name="chevron-down" size={12} color={COLORS.textMuted} />}
+                <Text style={[styles.minorTabText, selectedMinorId === m.id && styles.minorTabTextActive]}>
+                  {m.name}
+                </Text>
               </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
+            ))}
+          </View>
+        )}
+        {/* Color legend */}
+        {currentAgreement && currentAgreement.members.length > 0 && (
+          <View style={styles.legendBar}>
+            {currentAgreement.members.map((uid) => {
+              const color = getMemberColor(uid);
+              const isMe = uid === userData?.uid;
+              return (
+                <TouchableOpacity
+                  key={uid}
+                  style={styles.legendItem}
+                  onPress={() => isMe && setShowColorPicker(!showColorPicker)}
+                  activeOpacity={isMe ? 0.6 : 1}
+                >
+                  <View style={[styles.legendDot, { backgroundColor: color }]} />
+                  <Text style={styles.legendName} numberOfLines={1}>{memberNames[uid] || ''}</Text>
+                  {isMe && <Ionicons name="chevron-down" size={12} color={COLORS.textMuted} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+      </View>
       {showColorPicker && userData && currentAgreement && (
         <View style={styles.colorPickerRow}>
           {MEMBER_COLOR_PALETTE.map((color) => (
@@ -318,14 +320,17 @@ const styles = StyleSheet.create({
     elevation: 3, shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 8,
   },
   fabText: { color: COLORS.white, fontSize: 26, fontWeight: '300', marginTop: -2 },
-  legendBar: {
-    flexDirection: 'row', justifyContent: 'center', gap: SPACING.lg,
-    paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md,
+  toolBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: SPACING.xs, paddingHorizontal: SPACING.md,
     borderBottomWidth: 1, borderBottomColor: COLORS.borderLight,
   },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: SPACING.xs },
-  legendDot: { width: 12, height: 12, borderRadius: 6 },
-  legendName: { fontSize: FONT_SIZES.xs, color: COLORS.text, fontWeight: '500', maxWidth: 100 },
+  legendBar: {
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
+  },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  legendDot: { width: 10, height: 10, borderRadius: 5 },
+  legendName: { fontSize: FONT_SIZES.xs, color: COLORS.text, fontWeight: '500', maxWidth: 80 },
   colorPickerRow: {
     flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center',
     gap: SPACING.sm, paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md,
@@ -334,12 +339,11 @@ const styles = StyleSheet.create({
   colorOption: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: 'transparent' },
   colorOptionSelected: { borderColor: COLORS.text, borderWidth: 3 },
   minorTabs: {
-    flexDirection: 'row', paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    gap: SPACING.sm, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight,
+    flexDirection: 'row', gap: SPACING.xs,
   },
   minorTab: {
-    paddingVertical: SPACING.xs, paddingHorizontal: SPACING.md,
-    borderRadius: 12, backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
+    paddingVertical: 4, paddingHorizontal: SPACING.sm,
+    borderRadius: 10, backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border,
   },
   minorTabActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
   minorTabText: { fontSize: FONT_SIZES.xs, fontWeight: '600', color: COLORS.textMuted },
