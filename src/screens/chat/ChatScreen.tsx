@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { useAgreement } from '../../context/AgreementContext';
 import { chatService } from '../../services/chatService';
+import { authService } from '../../services/authService';
 import { ChatMessage } from '../../types';
 import MessageBubble from '../../components/chat/MessageBubble';
 import { COLORS, SPACING, FONT_SIZES } from '../../config/theme';
@@ -21,7 +22,21 @@ const ChatScreen: React.FC = () => {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [lockedBy, setLockedBy] = useState<string | null>(null);
+  const [memberProfiles, setMemberProfiles] = useState<{ [uid: string]: { displayName: string; showRelation?: boolean; relationToMinor?: string } }>({});
   const flatListRef = useRef<FlatList>(null);
+
+  useEffect(() => {
+    if (!currentAgreement) return;
+    const loadProfiles = async () => {
+      const profiles: typeof memberProfiles = {};
+      for (const uid of currentAgreement.members) {
+        const u = await authService.getUserData(uid);
+        if (u) profiles[uid] = { displayName: u.displayName, showRelation: u.showRelation, relationToMinor: u.relationToMinor };
+      }
+      setMemberProfiles(profiles);
+    };
+    loadProfiles();
+  }, [currentAgreement]);
 
   useEffect(() => {
     if (!currentAgreement) return;
@@ -135,11 +150,46 @@ const ChatScreen: React.FC = () => {
         data={messages}
         keyExtractor={(item) => item.id}
         inverted
-        renderItem={({ item }) => (
-          <TouchableOpacity onLongPress={() => handleHide(item.id)} activeOpacity={0.7}>
-            <MessageBubble message={item} isOwn={item.senderUid === user?.uid} />
-          </TouchableOpacity>
-        )}
+        renderItem={({ item, index }) => {
+          const msgDate = item.timestamp instanceof Date ? item.timestamp : new Date(item.timestamp);
+          const nextItem = messages[index + 1];
+          const nextDate = nextItem
+            ? (nextItem.timestamp instanceof Date ? nextItem.timestamp : new Date(nextItem.timestamp))
+            : null;
+          const showDateSep = !nextDate || msgDate.toDateString() !== nextDate.toDateString();
+
+          const todayStr = new Date().toDateString();
+          const yesterdayStr = new Date(Date.now() - 86400000).toDateString();
+          const dateLabel = msgDate.toDateString() === todayStr
+            ? 'Hoy'
+            : msgDate.toDateString() === yesterdayStr
+              ? 'Ayer'
+              : `${msgDate.getDate()}/${msgDate.getMonth() + 1}/${msgDate.getFullYear()}`;
+
+          const displayName = (() => {
+            const p = memberProfiles[item.senderUid];
+            if (!p) return item.senderName;
+            const name = p.displayName;
+            return p.showRelation && p.relationToMinor
+              ? `${name} (${p.relationToMinor.toLowerCase()})`
+              : name;
+          })();
+
+          return (
+            <>
+              <TouchableOpacity onLongPress={() => handleHide(item.id)} activeOpacity={0.7}>
+                <MessageBubble message={item} isOwn={item.senderUid === user?.uid} displayName={displayName} />
+              </TouchableOpacity>
+              {showDateSep && (
+                <View style={styles.dateSeparator}>
+                  <View style={styles.dateLine} />
+                  <Text style={styles.dateLabel}>{dateLabel}</Text>
+                  <View style={styles.dateLine} />
+                </View>
+              )}
+            </>
+          );
+        }}
         contentContainerStyle={styles.messagesList}
       />
 
@@ -257,6 +307,23 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   sendDisabled: { opacity: 0.5 },
+  dateSeparator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: SPACING.sm,
+    marginHorizontal: SPACING.lg,
+  },
+  dateLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: COLORS.border,
+  },
+  dateLabel: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textMuted,
+    fontWeight: '600',
+    marginHorizontal: SPACING.sm,
+  },
 });
 
 export default ChatScreen;

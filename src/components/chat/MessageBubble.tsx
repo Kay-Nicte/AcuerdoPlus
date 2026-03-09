@@ -6,9 +6,10 @@ import { COLORS, SPACING, FONT_SIZES } from '../../config/theme';
 interface MessageBubbleProps {
   message: ChatMessage;
   isOwn: boolean;
+  displayName?: string;
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn, displayName }) => {
   const time = message.timestamp instanceof Date
     ? message.timestamp
     : new Date(message.timestamp);
@@ -17,7 +18,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) => {
 
   return (
     <View style={[styles.container, isOwn ? styles.ownContainer : styles.otherContainer]}>
-      <Text style={styles.senderName}>{message.senderName}</Text>
+      <Text style={styles.senderName}>{displayName || message.senderName}</Text>
       <View style={[styles.bubble, isOwn ? styles.ownBubble : styles.otherBubble]}>
         <Text style={[styles.messageText, isOwn ? styles.ownText : styles.otherText]}>
           {message.message}
@@ -47,7 +48,6 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     marginBottom: 3,
     marginHorizontal: SPACING.sm,
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
     fontWeight: '600',
   },

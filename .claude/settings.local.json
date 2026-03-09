@@ -32,7 +32,8 @@
       "Bash(ls:*)",
       "Bash(npx expo:*)",
       "Bash(npx eas:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(npm ls:*)"
     ]
   }
 }
