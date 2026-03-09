@@ -23,8 +23,10 @@ const ExpenseBalanceSummary: React.FC<ExpenseBalanceSummaryProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Per-member balance */}
-      {entries.map(([uid, amount]) => {
+      {/* Per-member balance — only show cards with non-zero amounts */}
+      {entries
+        .filter(([, amount]) => Math.abs(amount) > 0.01)
+        .map(([uid, amount]) => {
         const isPositive = amount >= 0;
         const iconColor = isPositive ? COLORS.success : COLORS.warning;
         const iconBgColor = isPositive ? COLORS.successBg : COLORS.warningBg;
@@ -65,7 +67,7 @@ const ExpenseBalanceSummary: React.FC<ExpenseBalanceSummaryProps> = ({
         </View>
       )}
 
-      {settled && entries.length > 0 && (
+      {settled && (
         <View style={styles.settledCard}>
           <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
           <Text style={styles.settledText}>{t('expenseBalance.settled')}</Text>

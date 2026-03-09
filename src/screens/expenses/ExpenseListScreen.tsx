@@ -66,7 +66,6 @@ const ExpenseListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
           <View>
-            <Text style={styles.pageTitle}>{t('expenses.title', 'Gastos')}</Text>
             <ExpenseBalanceSummary balance={balance} memberNames={memberNames} debt={debt} settled={settled} />
             <View style={styles.filters}>
               {(['all', 'ordinary', 'extraordinary'] as const).map((f) => (
@@ -109,10 +108,10 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   list: { padding: SPACING.md, flexGrow: 1 },
-  filters: { flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.md },
+  filters: { flexDirection: 'row', gap: SPACING.xs, marginBottom: SPACING.md },
   filterChip: {
     paddingVertical: 7,
-    paddingHorizontal: SPACING.md,
+    paddingHorizontal: SPACING.sm,
     borderRadius: 20,
     borderWidth: 1.5,
     borderColor: COLORS.border,
