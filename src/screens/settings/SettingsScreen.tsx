@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Switch, Alert, StyleSheet, ScrollView, Image, Share } from 'react-native';
+import { View, Text, TouchableOpacity, Switch, StyleSheet, ScrollView, Image, Share } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useTranslation } from 'react-i18next';
@@ -26,14 +26,16 @@ const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { userData, signOut, deactivateAccount } = useAuth();
   const { currentAgreement, refreshAgreement } = useAgreement();
   const { isPremium } = useSubscription();
-  const { showToast } = useToast();
+  const { showToast, showConfirm } = useToast();
 
   const [showPremiumToast, setShowPremiumToast] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
 
   useEffect(() => {
     getStoredLanguage().then((lang) => setSelectedLanguage(lang));
   }, []);
+
 
   const handleLanguageChange = async (lang: string | null) => {
     setSelectedLanguage(lang);
@@ -42,9 +44,16 @@ const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       i18next.changeLanguage(lang);
     } else {
       // System default
-      const Localization = require('expo-localization');
-      const locale = Localization.getLocales()?.[0]?.languageCode ?? 'en';
-      i18next.changeLanguage(locale === 'es' ? 'es' : 'en');
+      const { Platform, NativeModules } = require('react-native');
+      let locale = 'en';
+      if (Platform.OS === 'ios') {
+        locale = NativeModules.SettingsManager?.settings?.AppleLocale
+          || NativeModules.SettingsManager?.settings?.AppleLanguages?.[0]
+          || 'en';
+      } else {
+        locale = NativeModules.I18nManager?.localeIdentifier || 'en';
+      }
+      i18next.changeLanguage(locale.startsWith('es') ? 'es' : 'en');
     }
   };
 
@@ -56,7 +65,7 @@ const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         showToast(t('settings.inviteCodeNotFound'), 'error');
         return;
       }
-      Alert.alert(
+      showConfirm(
         t('settings.inviteMember'),
         t('settings.shareCode', { code }),
         [
@@ -98,7 +107,7 @@ const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   };
 
   const handleLogout = () => {
-    Alert.alert(t('settings.logout'), t('settings.logoutConfirm'), [
+    showConfirm(t('settings.logout'), t('settings.logoutConfirm'), [
       { text: t('common.cancel'), style: 'cancel' },
       { text: t('settings.logout'), style: 'destructive', onPress: signOut },
     ]);
@@ -223,30 +232,43 @@ const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Language selector */}
+      {/* Language dropdown */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('settings.language')}</Text>
-        <View style={styles.card}>
-          {languageOptions.map((option, index) => {
-            const isSelected = selectedLanguage === option.value;
-            return (
-              <TouchableOpacity
-                key={option.label}
-                style={[styles.menuItem, index === languageOptions.length - 1 && { borderBottomWidth: 0 }]}
-                onPress={() => handleLanguageChange(option.value)}
-              >
-                <View style={styles.menuItemLeft}>
-                  <Ionicons
-                    name={isSelected ? 'radio-button-on' : 'radio-button-off'}
-                    size={20}
-                    color={isSelected ? COLORS.primary : COLORS.textMuted}
-                  />
-                  <Text style={[styles.menuText, isSelected && { color: COLORS.primary, fontWeight: '600' }]}>{option.label}</Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        <TouchableOpacity
+          style={styles.dropdown}
+          onPress={() => setLangDropdownOpen(!langDropdownOpen)}
+        >
+          <View style={styles.menuItemLeft}>
+            <Ionicons name="language-outline" size={20} color={COLORS.text} />
+            <Text style={styles.menuText}>
+              {languageOptions.find((o) => o.value === selectedLanguage)?.label ?? t('settings.system')}
+            </Text>
+          </View>
+          <Ionicons name={langDropdownOpen ? 'chevron-up' : 'chevron-down'} size={18} color={COLORS.textMuted} />
+        </TouchableOpacity>
+        {langDropdownOpen && (
+          <View style={styles.dropdownOptions}>
+            {languageOptions.map((option) => {
+              const isSelected = selectedLanguage === option.value;
+              return (
+                <TouchableOpacity
+                  key={option.label}
+                  style={styles.dropdownOption}
+                  onPress={() => {
+                    handleLanguageChange(option.value);
+                    setLangDropdownOpen(false);
+                  }}
+                >
+                  <Text style={[styles.dropdownOptionText, isSelected && { color: COLORS.primary, fontWeight: '700' }]}>
+                    {option.label}
+                  </Text>
+                  {isSelected && <Ionicons name="checkmark" size={18} color={COLORS.primary} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
       </View>
 
       {/* Actions */}
@@ -258,7 +280,7 @@ const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       <TouchableOpacity
         style={styles.deactivateButton}
         onPress={() => {
-          Alert.alert(
+          showConfirm(
             t('settings.deactivateAccount'),
             t('settings.deactivateAccount'),
             [
@@ -292,20 +314,21 @@ const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  content: { padding: SPACING.lg, paddingBottom: 40 },
+  content: { padding: SPACING.lg, paddingBottom: 100 },
   title: { fontSize: FONT_SIZES.xxl, fontWeight: 'bold', color: COLORS.text, marginBottom: SPACING.lg },
   section: { marginBottom: SPACING.lg },
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.sm },
-  sectionTitle: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.primary, marginBottom: SPACING.sm },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: COLORS.text, marginBottom: SPACING.sm, letterSpacing: -0.5 },
   editLink: { fontSize: FONT_SIZES.sm, color: COLORS.primary, fontWeight: '600' },
   card: {
-    backgroundColor: COLORS.white, borderRadius: 12, overflow: 'hidden',
-    borderWidth: 1, borderColor: COLORS.borderLight,
+    backgroundColor: COLORS.card, borderRadius: 16, overflow: 'hidden',
+    shadowColor: '#110810', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3,
   },
   profileCard: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.white, borderRadius: 12, padding: SPACING.md,
-    borderWidth: 1, borderColor: COLORS.borderLight, marginBottom: SPACING.lg,
+    backgroundColor: COLORS.card, borderRadius: 16, padding: SPACING.md,
+    shadowColor: '#110810', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3,
+    marginBottom: SPACING.lg,
   },
   avatar: {
     width: 52, height: 52, borderRadius: 26, backgroundColor: COLORS.primary,
@@ -329,22 +352,22 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingVertical: SPACING.md, paddingHorizontal: SPACING.md,
-    borderBottomWidth: 1, borderBottomColor: COLORS.borderLight,
+    borderBottomWidth: 1, borderBottomColor: COLORS.border,
   },
   infoRowLeft: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
   inviteRow: {
     flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
     paddingVertical: SPACING.md, paddingHorizontal: SPACING.md,
-    borderBottomWidth: 1, borderBottomColor: COLORS.borderLight,
-    backgroundColor: COLORS.primary + '08',
+    borderBottomWidth: 1, borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.primaryPale,
   },
   inviteText: { flex: 1, fontSize: FONT_SIZES.sm, color: COLORS.primary, fontWeight: '600' },
-  label: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary },
+  label: { fontSize: FONT_SIZES.sm, fontWeight: '500', color: COLORS.textMuted },
   value: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.text },
   menuItem: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingVertical: SPACING.md, paddingHorizontal: SPACING.md,
-    borderBottomWidth: 1, borderBottomColor: COLORS.borderLight,
+    borderBottomWidth: 1, borderBottomColor: COLORS.border,
   },
   menuItemLeft: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
   menuItemRight: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
@@ -354,14 +377,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.xs, paddingVertical: 2,
   },
   premiumTagText: { fontSize: 10, fontWeight: '700', color: COLORS.primary },
+  dropdown: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: COLORS.card, borderRadius: 16, padding: SPACING.md,
+    shadowColor: '#110810', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3,
+  },
+  dropdownOptions: {
+    backgroundColor: COLORS.card, borderRadius: 16, marginTop: SPACING.xs,
+    shadowColor: '#110810', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3,
+    overflow: 'hidden',
+  },
+  dropdownOption: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: SPACING.md, borderBottomWidth: 1, borderBottomColor: COLORS.border,
+  },
+  dropdownOptionText: {
+    fontSize: FONT_SIZES.md, color: COLORS.text,
+  },
   logoutButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm,
-    backgroundColor: COLORS.error + '10', padding: SPACING.md, borderRadius: 8,
+    backgroundColor: 'transparent', padding: 14, borderRadius: 12,
     marginTop: SPACING.md,
   },
   logoutText: { color: COLORS.error, fontSize: FONT_SIZES.md, fontWeight: '600' },
   deactivateButton: {
-    padding: SPACING.md, borderRadius: 8, alignItems: 'center', marginTop: SPACING.sm,
+    padding: 14, borderRadius: 12, alignItems: 'center', marginTop: SPACING.sm,
   },
   deactivateText: { color: COLORS.textMuted, fontSize: FONT_SIZES.sm },
 });

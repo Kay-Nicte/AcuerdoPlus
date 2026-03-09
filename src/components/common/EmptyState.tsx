@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
+    color: COLORS.textMuted,
     textAlign: 'center',
   },
 });

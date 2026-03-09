@@ -95,13 +95,16 @@ const AuthorizationListScreen: React.FC<{ navigation: any }> = ({ navigation }) 
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  list: { padding: SPACING.md, flexGrow: 1 },
+  list: { padding: SPACING.md, paddingBottom: 100, flexGrow: 1 },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.xs, marginBottom: SPACING.md },
   chip: { paddingVertical: SPACING.xs, paddingHorizontal: SPACING.sm, borderRadius: 16, borderWidth: 1, borderColor: COLORS.border },
-  chipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '10' },
+  chipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primaryPale },
   chipText: { fontSize: FONT_SIZES.xs, color: COLORS.textSecondary },
   chipTextActive: { color: COLORS.primary, fontWeight: '600' },
-  card: { backgroundColor: COLORS.white, borderRadius: 12, padding: SPACING.md, marginBottom: SPACING.sm, borderWidth: 1, borderColor: COLORS.borderLight },
+  card: {
+    backgroundColor: COLORS.card, borderRadius: 16, padding: SPACING.md, marginBottom: SPACING.sm,
+    shadowColor: '#110810', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3,
+  },
   cardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardInfo: { flex: 1, marginRight: SPACING.sm },
   activity: { fontSize: FONT_SIZES.md, fontWeight: '600', color: COLORS.text },
@@ -110,7 +113,7 @@ const styles = StyleSheet.create({
     position: 'absolute', right: SPACING.lg, bottom: SPACING.lg,
     width: 56, height: 56, borderRadius: 28,
     backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center',
-    elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4,
+    elevation: 4, shadowColor: '#110810', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 8,
   },
   fabText: { color: COLORS.white, fontSize: 28, fontWeight: '300', marginTop: -2 },
 });

@@ -22,6 +22,7 @@ export interface Agreement {
   majorityCustodian?: string; // UID del custodio mayoritario (si aplica)
   exclusiveCustodian?: string; // UID del custodio exclusivo (si aplica)
   approvalMode: boolean;
+  memberColors?: { [uid: string]: string }; // Color elegido por cada miembro
 }
 
 // Tipos de menor
@@ -140,10 +141,12 @@ export interface HistoryEntry {
 
 // Tipos de patrón de custodia recurrente
 export interface PatternRule {
+  mode: 'alternating' | 'weekdays'; // alternating turns or fixed weekdays
   frequency: 'weekly' | 'biweekly' | 'monthly';
   alternating: boolean;
-  assignments: [string, string]; // parent UIDs that alternate
-  durationDays: number; // days per turn (7 = one week)
+  assignments: [string, string]; // parent UIDs
+  durationDays: number; // days per turn (alternating mode)
+  weekdayAssignments?: { [day: number]: string }; // 0=Sun..6=Sat → UID (weekdays mode)
   endDate?: string; // ISO date, optional end boundary
 }
 

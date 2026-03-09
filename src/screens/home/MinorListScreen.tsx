@@ -68,6 +68,7 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: SPACING.md,
+    paddingBottom: 100,
     flexGrow: 1,
   },
   fab: {
@@ -80,11 +81,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
+    elevation: 3,
+    shadowColor: '#110810',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
   },
   fabText: {
     color: COLORS.white,

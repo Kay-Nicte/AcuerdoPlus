@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.primary,
     borderStyle: 'dashed',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: SPACING.md,
     alignItems: 'center',
   },

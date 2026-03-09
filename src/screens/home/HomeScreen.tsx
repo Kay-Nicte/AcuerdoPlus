@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, FlatList, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, FlatList, Dimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -8,12 +8,14 @@ import { useAgreement } from '../../context/AgreementContext';
 import { minorService } from '../../services/minorService';
 import { notificationService } from '../../services/notificationService';
 import { Minor, AppNotification } from '../../types';
+import { useSubscription } from '../../context/SubscriptionContext';
 import { COLORS, SPACING, FONT_SIZES } from '../../config/theme';
 
 const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { t } = useTranslation();
   const { userData } = useAuth();
   const { currentAgreement } = useAgreement();
+  const { isPremium } = useSubscription();
   const [minors, setMinors] = useState<Minor[]>([]);
   const [activeMinorIndex, setActiveMinorIndex] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -63,17 +65,42 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     exclusive: t('custodyTypes.exclusive'),
   };
 
+  const getInitial = (name: string) => name.charAt(0).toUpperCase();
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 6 && hour < 13) return t('home.goodMorning');
+    if (hour >= 13 && hour < 20) return t('home.goodAfternoon');
+    return t('home.goodEvening');
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.topRow}>
+      {/* Header */}
+      <View style={styles.headerCard}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.greeting}>{t('home.greeting', { name: userData?.displayName })}{userData?.showRelation && userData?.relationToMinor ? ` (${userData.relationToMinor})` : ''}</Text>
+          <Text style={styles.welcomeEyebrow}>{getGreeting()}</Text>
+          <Text style={styles.headerName}>
+            {userData?.displayName}
+            {userData?.showRelation && userData?.relationToMinor ? (
+              <Text style={styles.headerRelation}> ({userData.relationToMinor.toLowerCase()})</Text>
+            ) : null}
+          </Text>
         </View>
-        <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Settings')}>
-          <Ionicons name="person-circle-outline" size={36} color={COLORS.primary} />
+        <TouchableOpacity style={styles.avatarColumn} onPress={() => navigation.navigate('Settings')}>
+          <View style={styles.avatarRing}>
+            <Ionicons name="person-circle-outline" size={44} color={COLORS.primary} />
+          </View>
+          {isPremium && (
+            <View style={styles.premiumBadge}>
+              <Ionicons name="star" size={9} color={COLORS.primary} />
+              <Text style={styles.premiumBadgeText}>Premium</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
+      {/* Agreement hero card with minors carousel */}
       {currentAgreement && minors.length > 0 && (
         <>
           <FlatList
@@ -90,34 +117,51 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               const model = minor.economicModel || currentAgreement.economicModel;
               return (
                 <TouchableOpacity
-                  style={[styles.infoCard, { width: cardWidth }]}
+                  style={[styles.heroCard, { width: cardWidth }]}
                   onPress={() => navigation.navigate('MinorDetail', { minorId: minor.id })}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.cardTitle}>{t('home.agreementName', { name: minor.name })}</Text>
-                  <View style={styles.infoRow}>
-                    <Text style={styles.label}>{t('home.economicModel')}</Text>
-                    <Text style={styles.value}>{modelLabels[model]}</Text>
-                  </View>
-                  {minor.fixedAmount && (model === 'fixed' || model === 'mixed') && (
-                    <View style={styles.infoRow}>
-                      <Text style={styles.label}>{t('home.monthlyPension')}</Text>
-                      <Text style={styles.value}>{String(minor.fixedAmount).replace('.', ',')} EUR</Text>
+                  {/* Hero top */}
+                  <View style={styles.heroTop}>
+                    <View style={styles.heroCircle1} />
+                    <View style={styles.heroCircle2} />
+                    <View style={styles.heroTopRow}>
+                      <Text style={styles.heroMinorName}>{minor.name}</Text>
+                      <Text style={styles.heroEyebrow}>{t('home.activeAgreement')}</Text>
                     </View>
-                  )}
-                  {currentAgreement.custodyType && (
-                    <View style={styles.infoRow}>
-                      <Text style={styles.label}>{t('home.custody')}</Text>
-                      <Text style={styles.value}>{custodyLabels[currentAgreement.custodyType]}</Text>
-                    </View>
-                  )}
-                  <View style={styles.infoRow}>
-                    <Text style={styles.label}>{t('home.approvalMode')}</Text>
-                    <Text style={styles.value}>{currentAgreement.approvalMode ? t('common.enabled') : t('common.disabled')}</Text>
                   </View>
-                  <View style={styles.infoRow}>
-                    <Text style={styles.label}>{t('home.members')}</Text>
-                    <Text style={styles.value}>{currentAgreement.members.length}/2</Text>
+                  {/* Hero body */}
+                  <View style={styles.heroBody}>
+                    <View style={styles.heroRow}>
+                      <Text style={styles.heroLabel}>{t('home.economicModel')}</Text>
+                      <Text style={styles.heroValue}>{modelLabels[model]}</Text>
+                    </View>
+                    {(model === 'fixed' || model === 'mixed') && (
+                      <View style={styles.heroRow}>
+                        <Text style={styles.heroLabel}>{t('home.monthlyPension')}</Text>
+                        <Text style={styles.heroValue}>
+                          {minor.fixedAmount ? `${String(minor.fixedAmount).replace('.', ',')} EUR` : t('common.unspecified')}
+                        </Text>
+                      </View>
+                    )}
+                    {currentAgreement.custodyType && (
+                      <View style={styles.heroRow}>
+                        <Text style={styles.heroLabel}>{t('home.custody')}</Text>
+                        <Text style={styles.heroValue}>{custodyLabels[currentAgreement.custodyType]}</Text>
+                      </View>
+                    )}
+                    <View style={styles.heroRow}>
+                      <Text style={styles.heroLabel}>{t('home.approvalMode')}</Text>
+                      <View style={[styles.approvalPill, currentAgreement.approvalMode ? styles.approvalPillActive : styles.approvalPillInactive]}>
+                        <Text style={[styles.approvalPillText, currentAgreement.approvalMode ? styles.approvalPillTextActive : styles.approvalPillTextInactive]}>
+                          {currentAgreement.approvalMode ? t('common.enabled') : t('common.disabled')}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.heroRow}>
+                      <Text style={styles.heroLabel}>{t('home.members')}</Text>
+                      <Text style={styles.heroValue}>{currentAgreement.members.length}/2</Text>
+                    </View>
                   </View>
                 </TouchableOpacity>
               );
@@ -133,20 +177,26 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </>
       )}
 
+      {/* Agreement card without minors */}
       {currentAgreement && minors.length === 0 && (
-        <View style={styles.infoCard}>
-          <Text style={styles.cardTitle}>{t('home.agreement')}</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>{t('home.economicModel')}</Text>
-            <Text style={styles.value}>{modelLabels[currentAgreement.economicModel]}</Text>
+        <View style={styles.heroCard}>
+          <View style={styles.heroTop}>
+            <Text style={styles.heroEyebrow}>{t('home.agreement')}</Text>
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>{t('home.members')}</Text>
-            <Text style={styles.value}>{currentAgreement.members.length}/2</Text>
+          <View style={styles.heroBody}>
+            <View style={styles.heroRow}>
+              <Text style={styles.heroLabel}>{t('home.economicModel')}</Text>
+              <Text style={styles.heroValue}>{modelLabels[currentAgreement.economicModel]}</Text>
+            </View>
+            <View style={styles.heroRow}>
+              <Text style={styles.heroLabel}>{t('home.members')}</Text>
+              <Text style={styles.heroValue}>{currentAgreement.members.length}/2</Text>
+            </View>
           </View>
         </View>
       )}
 
+      {/* Minors section */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>{t('home.minorsCount', { count: minors.length })}</Text>
@@ -162,37 +212,54 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <Text style={styles.emptyText}>{t('home.addFirstMinor')}</Text>
           </TouchableOpacity>
         ) : (
-          minors.slice(0, 3).map((minor) => (
-            <TouchableOpacity
-              key={minor.id}
-              style={styles.minorItem}
-              onPress={() => navigation.navigate('MinorDetail', { minorId: minor.id })}
-            >
-              <Text style={styles.minorName}>{minor.name}</Text>
-            </TouchableOpacity>
-          ))
+          minors.slice(0, 3).map((minor) => {
+            const model = minor.economicModel || currentAgreement?.economicModel;
+            return (
+              <TouchableOpacity
+                key={minor.id}
+                style={styles.minorItem}
+                onPress={() => navigation.navigate('MinorDetail', { minorId: minor.id })}
+              >
+                <View style={styles.minorInitialBox}>
+                  <Text style={styles.minorInitial}>{getInitial(minor.name)}</Text>
+                </View>
+                <View style={styles.minorInfo}>
+                  <Text style={styles.minorName}>{minor.name}</Text>
+                  {model && <Text style={styles.minorSubtitle}>{modelLabels[model]}</Text>}
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={COLORS.textLight} />
+              </TouchableOpacity>
+            );
+          })
         )}
       </View>
 
+      {/* Quick actions */}
       <Text style={styles.sectionTitle}>{t('home.quickActions')}</Text>
       <View style={styles.actionsGrid}>
         <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('AddMinor')}>
-          <Ionicons name="person-add-outline" size={24} color={COLORS.primary} style={styles.actionIconStyle} />
+          <View style={styles.actionIconBox}>
+            <Ionicons name="person-add-outline" size={16} color={COLORS.primary} />
+          </View>
           <Text style={styles.actionLabel}>{t('home.addMinor')}</Text>
         </TouchableOpacity>
         {(currentAgreement?.economicModel === 'fixed' || currentAgreement?.economicModel === 'mixed') && (
           <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('MaintenanceList')}>
-            <Ionicons name="wallet-outline" size={24} color={COLORS.primary} style={styles.actionIconStyle} />
+            <View style={styles.actionIconBox}>
+              <Ionicons name="wallet-outline" size={16} color={COLORS.primary} />
+            </View>
             <Text style={styles.actionLabel}>{t('home.maintenance')}</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('AuthorizationList')}>
-          <Ionicons name="shield-checkmark-outline" size={24} color={COLORS.primary} style={styles.actionIconStyle} />
+          <View style={styles.actionIconBox}>
+            <Ionicons name="shield-checkmark-outline" size={16} color={COLORS.primary} />
+          </View>
           <Text style={styles.actionLabel}>{t('home.authorizations')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('Notifications')}>
-          <View>
-            <Ionicons name="notifications-outline" size={24} color={COLORS.primary} style={styles.actionIconStyle} />
+          <View style={styles.actionIconBox}>
+            <Ionicons name="notifications-outline" size={16} color={COLORS.primary} />
             {unreadCount > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
@@ -203,6 +270,7 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
+      {/* Recent notifications */}
       {recentNotifications.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -235,30 +303,166 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING.lg,
     paddingTop: 60,
+    paddingBottom: SPACING.sm,
   },
-  topRow: {
+  /* Header */
+  headerCard: {
+    backgroundColor: COLORS.card,
+    borderRadius: 16,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    marginBottom: SPACING.md,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: SPACING.lg,
+    shadowColor: '#110810',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  profileButton: {
+  welcomeEyebrow: {
+    fontSize: FONT_SIZES.xs,
+    fontWeight: '500',
+    color: COLORS.textMuted,
+    marginBottom: 2,
+    letterSpacing: 0.2,
+  },
+  headerName: {
+    fontSize: FONT_SIZES.xl,
+    fontWeight: '800',
+    color: COLORS.text,
+    letterSpacing: -0.5,
+  },
+  headerRelation: {
+    color: COLORS.primary,
+    fontWeight: '800',
+  },
+  avatarColumn: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primaryPale,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    gap: 3,
+  },
+  premiumBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  avatarRing: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 2,
+    borderColor: COLORS.primaryBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginLeft: SPACING.sm,
   },
-  greeting: {
-    fontSize: FONT_SIZES.xxl,
-    fontWeight: 'bold',
+  /* Hero agreement card */
+  heroCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: SPACING.sm,
+    shadowColor: '#110810',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.10,
+    shadowRadius: 32,
+    elevation: 6,
+  },
+  heroTop: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 12,
+    overflow: 'hidden',
+  },
+  heroTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  heroCircle1: {
+    position: 'absolute',
+    right: -30,
+    top: -30,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  heroCircle2: {
+    position: 'absolute',
+    right: 40,
+    bottom: -40,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  heroEyebrow: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.55)',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  heroMinorName: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: COLORS.white,
+    letterSpacing: -0.3,
+  },
+  heroBody: {
+    backgroundColor: COLORS.card,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+  },
+  heroRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: SPACING.xs + 2,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  heroLabel: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '500',
+    color: COLORS.textMuted,
+  },
+  heroValue: {
+    fontSize: FONT_SIZES.sm,
+    fontWeight: '600',
     color: COLORS.text,
   },
-  subtitle: {
-    fontSize: FONT_SIZES.md,
-    color: COLORS.textSecondary,
+  approvalPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
   },
-  infoCard: {
-    backgroundColor: COLORS.backgroundSecondary,
-    borderRadius: 12,
-    padding: SPACING.md,
-    marginBottom: SPACING.sm,
+  approvalPillActive: {
+    backgroundColor: COLORS.successBg,
   },
+  approvalPillInactive: {
+    backgroundColor: COLORS.primaryPale,
+  },
+  approvalPillText: {
+    fontSize: FONT_SIZES.xs,
+    fontWeight: '600',
+  },
+  approvalPillTextActive: {
+    color: COLORS.success,
+  },
+  approvalPillTextInactive: {
+    color: COLORS.textMuted,
+  },
+  /* Dots */
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -275,26 +479,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     width: 20,
   },
-  cardTitle: {
-    fontSize: FONT_SIZES.lg,
-    fontWeight: '700',
-    color: COLORS.primary,
-    marginBottom: SPACING.sm,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: SPACING.xs,
-  },
-  label: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-  },
-  value: {
-    fontSize: FONT_SIZES.sm,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
+  /* Section */
   section: {
     marginBottom: SPACING.lg,
   },
@@ -306,66 +491,115 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: FONT_SIZES.lg,
-    fontWeight: '700',
+    fontWeight: '800',
     color: COLORS.text,
     marginBottom: SPACING.sm,
+    letterSpacing: -0.5,
   },
   seeAll: {
     fontSize: FONT_SIZES.sm,
     color: COLORS.primary,
     fontWeight: '600',
   },
+  /* Empty */
   emptyCard: {
     borderWidth: 1,
     borderColor: COLORS.border,
     borderStyle: 'dashed',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: SPACING.lg,
     alignItems: 'center',
+    backgroundColor: COLORS.card,
   },
   emptyText: {
     color: COLORS.primary,
     fontSize: FONT_SIZES.md,
     fontWeight: '600',
   },
+  /* Minor items */
   minorItem: {
-    backgroundColor: COLORS.white,
-    borderRadius: 8,
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
     padding: SPACING.md,
-    marginBottom: SPACING.xs,
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    marginBottom: SPACING.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#110810',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  minorInitialBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: COLORS.primaryPale,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.md,
+  },
+  minorInitial: {
+    fontSize: FONT_SIZES.lg,
+    fontWeight: '800',
+    color: COLORS.primary,
+  },
+  minorInfo: {
+    flex: 1,
   },
   minorName: {
     fontSize: FONT_SIZES.md,
     color: COLORS.text,
-    fontWeight: '500',
+    fontWeight: '600',
   },
+  minorSubtitle: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textMuted,
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  /* Quick actions */
   actionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: SPACING.sm,
+    marginBottom: SPACING.lg,
   },
   actionCard: {
-    backgroundColor: COLORS.primary + '10',
+    backgroundColor: COLORS.card,
     borderRadius: 12,
-    padding: SPACING.md,
+    paddingVertical: 10,
+    paddingHorizontal: SPACING.sm,
+    flexDirection: 'row',
     alignItems: 'center',
-    minWidth: 120,
+    gap: SPACING.sm,
+    minWidth: '47%' as any,
     flex: 1,
+    shadowColor: '#110810',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  actionIconStyle: {
-    marginBottom: SPACING.xs,
+  actionIconBox: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: COLORS.primaryPale,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   actionLabel: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.primary,
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textSecondary,
     fontWeight: '600',
+    flexShrink: 1,
   },
+  /* Badge */
   badge: {
     position: 'absolute',
     top: -6,
-    right: -10,
+    right: -6,
     backgroundColor: COLORS.error,
     borderRadius: 10,
     minWidth: 20,
@@ -379,13 +613,17 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
   },
+  /* Notifications */
   notifPreview: {
-    backgroundColor: COLORS.white,
-    borderRadius: 8,
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
     padding: SPACING.md,
-    marginBottom: SPACING.xs,
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    marginBottom: SPACING.sm,
+    shadowColor: '#110810',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 3,
   },
   notifPreviewTitle: {
     fontSize: FONT_SIZES.sm,
@@ -395,7 +633,7 @@ const styles = StyleSheet.create({
   },
   notifPreviewBody: {
     fontSize: FONT_SIZES.xs,
-    color: COLORS.textSecondary,
+    color: COLORS.textMuted,
   },
 });
 

@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   field: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: SPACING.md,
   },
   fieldText: {

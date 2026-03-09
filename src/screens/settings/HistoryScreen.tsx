@@ -115,7 +115,7 @@ const HistoryScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  list: { padding: SPACING.md, flexGrow: 1 },
+  list: { padding: SPACING.md, paddingBottom: 100, flexGrow: 1 },
   filtersScroll: { marginBottom: SPACING.md },
   filtersContent: { gap: SPACING.xs },
   chip: {
@@ -132,13 +132,16 @@ const styles = StyleSheet.create({
   entry: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: COLORS.white,
-    borderRadius: 10,
+    backgroundColor: COLORS.card,
+    borderRadius: 16,
     padding: SPACING.md,
     marginBottom: SPACING.sm,
     borderLeftWidth: 3,
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    shadowColor: '#110810',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 3,
   },
   iconContainer: {
     width: 36,

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, Alert, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
@@ -14,7 +14,7 @@ const MinorDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
   const { t } = useTranslation();
   const { minorId } = route.params;
   const { user, userData } = useAuth();
-  const { showToast } = useToast();
+  const { showToast, showConfirm } = useToast();
   const [minor, setMinor] = useState<Minor | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +36,7 @@ const MinorDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
   };
 
   const handleDeactivate = () => {
-    Alert.alert(
+    showConfirm(
       t('minors.deactivate'),
       t('minors.deactivateConfirm', { name: minor?.name }),
       [
@@ -128,29 +128,37 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING.lg,
     paddingTop: SPACING.xl,
+    paddingBottom: 100,
   },
   name: {
     fontSize: FONT_SIZES.xxl,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: COLORS.text,
+    letterSpacing: -0.5,
     marginBottom: SPACING.lg,
   },
   infoCard: {
-    backgroundColor: COLORS.backgroundSecondary,
-    borderRadius: 12,
+    backgroundColor: COLORS.card,
+    borderRadius: 16,
     padding: SPACING.md,
     marginBottom: SPACING.lg,
+    shadowColor: '#110810',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 3,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: SPACING.sm,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderLight,
+    borderBottomColor: COLORS.border,
   },
   label: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+    fontWeight: '500',
+    color: COLORS.textMuted,
   },
   value: {
     fontSize: FONT_SIZES.sm,
@@ -158,15 +166,16 @@ const styles = StyleSheet.create({
     color: COLORS.text,
   },
   sectionTitle: {
-    fontSize: FONT_SIZES.lg,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '800',
     color: COLORS.text,
+    letterSpacing: -0.5,
     marginBottom: SPACING.sm,
   },
   linkButton: {
-    backgroundColor: COLORS.primary + '10',
+    backgroundColor: COLORS.primaryPale,
     padding: SPACING.md,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: SPACING.sm,
   },
   linkText: {
@@ -177,7 +186,7 @@ const styles = StyleSheet.create({
   dangerButton: {
     backgroundColor: COLORS.error + '10',
     padding: SPACING.md,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     marginTop: SPACING.lg,
   },

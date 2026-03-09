@@ -120,14 +120,15 @@ const PdfExportScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  content: { padding: SPACING.lg, paddingTop: SPACING.xl },
+  content: { padding: SPACING.lg, paddingTop: SPACING.xl, paddingBottom: 100 },
   title: { fontSize: FONT_SIZES.xxl, fontWeight: 'bold', color: COLORS.text, marginBottom: SPACING.xs },
   subtitle: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginBottom: SPACING.lg },
   sectionItem: {
     flexDirection: 'row', alignItems: 'center', padding: SPACING.md,
-    borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, marginBottom: SPACING.sm,
+    backgroundColor: COLORS.card, borderRadius: 16, marginBottom: SPACING.sm,
+    shadowColor: '#110810', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3,
   },
-  sectionSelected: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '08' },
+  sectionSelected: { borderWidth: 1, borderColor: COLORS.primaryBorder, backgroundColor: COLORS.primaryPale },
   checkbox: {
     width: 24, height: 24, borderRadius: 4, borderWidth: 2, borderColor: COLORS.border,
     justifyContent: 'center', alignItems: 'center', marginRight: SPACING.md,
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
   checkmark: { color: COLORS.white, fontSize: 14, fontWeight: '700' },
   sectionLabel: { fontSize: FONT_SIZES.md, color: COLORS.text, fontWeight: '600', marginTop: SPACING.lg, marginBottom: SPACING.xs },
   sectionLabelSelected: { fontWeight: '600', color: COLORS.primary },
-  button: { backgroundColor: COLORS.primary, padding: SPACING.md, borderRadius: 8, alignItems: 'center', marginTop: SPACING.lg },
+  button: { backgroundColor: COLORS.primary, padding: 14, borderRadius: 12, alignItems: 'center', marginTop: SPACING.lg },
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: COLORS.white, fontSize: FONT_SIZES.md, fontWeight: '600' },
 });

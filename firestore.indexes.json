@@ -57,6 +57,14 @@
         { "fieldPath": "agreementId", "order": "ASCENDING" },
         { "fieldPath": "minorId", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "minors",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "agreementId", "order": "ASCENDING" },
+        { "fieldPath": "isActive", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

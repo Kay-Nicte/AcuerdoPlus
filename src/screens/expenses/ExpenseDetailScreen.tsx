@@ -104,11 +104,11 @@ const ExpenseDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route,
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  content: { padding: SPACING.lg, paddingTop: SPACING.xl },
+  content: { padding: SPACING.lg, paddingTop: SPACING.xl, paddingBottom: 100 },
   description: { fontSize: FONT_SIZES.xl, fontWeight: 'bold', color: COLORS.text, marginBottom: SPACING.xs },
   amount: { fontSize: 36, fontWeight: '700', color: COLORS.primary, marginBottom: SPACING.lg },
-  infoCard: { backgroundColor: COLORS.backgroundSecondary, borderRadius: 12, padding: SPACING.md, marginBottom: SPACING.lg },
-  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: SPACING.sm, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
+  infoCard: { backgroundColor: COLORS.card, borderRadius: 16, padding: SPACING.md, marginBottom: SPACING.lg, shadowColor: '#110810', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: SPACING.sm, borderBottomWidth: 1, borderBottomColor: COLORS.border },
   label: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary },
   value: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.text },
   sectionTitle: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.text, marginBottom: SPACING.sm },
@@ -116,8 +116,8 @@ const styles = StyleSheet.create({
   splitName: { fontSize: FONT_SIZES.md, color: COLORS.text },
   splitPct: { fontSize: FONT_SIZES.md, fontWeight: '600', color: COLORS.textSecondary },
   receiptSection: { marginTop: SPACING.lg },
-  receiptImage: { width: '100%', height: 200, borderRadius: 8, backgroundColor: COLORS.backgroundSecondary },
-  correctButton: { backgroundColor: COLORS.warning + '15', padding: SPACING.md, borderRadius: 8, alignItems: 'center', marginTop: SPACING.lg },
+  receiptImage: { width: '100%', height: 200, borderRadius: 16, backgroundColor: COLORS.card },
+  correctButton: { backgroundColor: COLORS.warningBg, padding: SPACING.md, borderRadius: 12, alignItems: 'center', marginTop: SPACING.lg },
   correctButtonText: { color: COLORS.warning, fontSize: FONT_SIZES.md, fontWeight: '600' },
 });
 

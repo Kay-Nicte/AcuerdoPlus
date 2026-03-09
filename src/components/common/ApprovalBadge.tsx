@@ -14,18 +14,19 @@ const getLabels = (): Record<string, string> => ({
   paid: i18next.t('approvalBadge.paid'),
 });
 
-const BADGE_COLORS: Record<string, string> = {
-  pending: COLORS.pending,
-  approved: COLORS.approved,
-  rejected: COLORS.rejected,
-  paid: COLORS.paid,
+const BADGE_STYLES: Record<string, { bg: string; fg: string }> = {
+  pending: { bg: COLORS.warningBg, fg: COLORS.warning },
+  approved: { bg: COLORS.successBg, fg: COLORS.success },
+  rejected: { bg: COLORS.error + '15', fg: COLORS.error },
+  paid: { bg: COLORS.successBg, fg: COLORS.success },
 };
 
 const ApprovalBadge: React.FC<ApprovalBadgeProps> = ({ status }) => {
   const LABELS = getLabels();
+  const style = BADGE_STYLES[status];
   return (
-    <View style={[styles.badge, { backgroundColor: BADGE_COLORS[status] + '20' }]}>
-      <Text style={[styles.text, { color: BADGE_COLORS[status] }]}>
+    <View style={[styles.badge, { backgroundColor: style.bg }]}>
+      <Text style={[styles.text, { color: style.fg }]}>
         {LABELS[status]}
       </Text>
     </View>

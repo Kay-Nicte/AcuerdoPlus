@@ -19,6 +19,7 @@ export default {
     inactive: 'Inactive',
     enabled: 'Enabled',
     disabled: 'Disabled',
+    unspecified: 'Not specified',
     premium: 'Premium',
     free: 'Free',
     seeAll: 'See all',
@@ -63,6 +64,8 @@ export default {
   // Home
   home: {
     greeting: 'Hello, {{name}}',
+    welcomeBack: 'Welcome back',
+    activeAgreement: 'Active agreement',
     panelTitle: 'Your agreement panel',
     agreement: 'Agreement',
     agreementName: 'Agreement ({{name}})',
@@ -143,6 +146,7 @@ export default {
   // Calendar
   calendar: {
     title: 'Calendar',
+    general: 'General',
     dayEvents: "Day's events",
     noEvents: 'No events for this day',
     newEvent: 'New event',
@@ -168,6 +172,18 @@ export default {
     needMinorFirst: 'You need to register at least one minor before creating events.',
     addMinorAction: 'Add minor',
     minor: 'Minor',
+    patternType: 'Pattern type',
+    alternating: 'Alternating turns',
+    byWeekday: 'By day of the week',
+    assignDays: 'Assign each day of the week',
+    assignDaysHint: 'Tap each day to assign. Tap again to switch member.',
+    mon: 'M',
+    tue: 'T',
+    wed: 'W',
+    thu: 'T',
+    fri: 'F',
+    sat: 'S',
+    sun: 'S',
   },
 
   // Event detail
@@ -255,6 +271,8 @@ export default {
     authorizations: 'Authorizations',
     exportPdf: 'Export PDF',
     approvalMode: 'Approval mode',
+    myColor: 'My color',
+    colorOf: '{{name}}\'s color',
     economicModel: 'Economic model',
     members: 'Members',
     inviteMember: 'Invite the other member',
@@ -270,7 +288,7 @@ export default {
     invite: 'Invite',
     language: 'Language',
     system: 'System',
-    spanish: 'Espanol',
+    spanish: 'Español',
     english: 'English',
   },
 

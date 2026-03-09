@@ -16,7 +16,7 @@
 ## Convenciones
 - Iconos: siempre Ionicons (`@expo/vector-icons`), nunca emojis literales
 - Tema: usar COLORS, SPACING, FONT_SIZES de `src/config/theme.ts`
-- Idioma: todo en espanol
+- Idioma: todo en español
 
 ## Sistema de agentes multi-modelo
 

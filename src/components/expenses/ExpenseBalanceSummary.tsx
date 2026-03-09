@@ -23,25 +23,33 @@ const ExpenseBalanceSummary: React.FC<ExpenseBalanceSummaryProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{t('expenseBalance.title')}</Text>
-
       {/* Per-member balance */}
-      {entries.map(([uid, amount]) => (
-        <View key={uid} style={styles.row}>
-          <View style={styles.nameRow}>
-            <Ionicons name="person-outline" size={16} color={COLORS.textSecondary} />
-            <Text style={styles.name}>{memberNames[uid] || uid}</Text>
+      {entries.map(([uid, amount]) => {
+        const isPositive = amount >= 0;
+        const iconColor = isPositive ? COLORS.success : COLORS.warning;
+        const iconBgColor = isPositive ? COLORS.successBg : COLORS.warningBg;
+
+        return (
+          <View key={uid} style={styles.memberCard}>
+            <View style={[styles.iconBox, { backgroundColor: iconBgColor }]}>
+              <Ionicons
+                name={isPositive ? 'checkmark-circle' : 'alert-circle'}
+                size={24}
+                color={iconColor}
+              />
+            </View>
+            <View style={styles.memberInfo}>
+              <Text style={styles.memberAmount}>{formatCurrency(Math.abs(amount))}</Text>
+              <Text style={styles.memberName}>{memberNames[uid] || uid}</Text>
+              <View style={[styles.statusTag, { backgroundColor: isPositive ? COLORS.successBg : COLORS.warningBg }]}>
+                <Text style={[styles.statusTagText, { color: isPositive ? COLORS.success : COLORS.warning }]}>
+                  {isPositive ? t('expenseBalance.overpaid') : t('expenseBalance.owes')}
+                </Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.amountRow}>
-            <Text style={styles.amountLabel}>
-              {amount >= 0 ? t('expenseBalance.overpaid') : t('expenseBalance.owes')}
-            </Text>
-            <Text style={[styles.amount, { color: amount >= 0 ? COLORS.success : COLORS.error }]}>
-              {formatCurrency(Math.abs(amount))}
-            </Text>
-          </View>
-        </View>
-      ))}
+        );
+      })}
 
       {/* Clear debt summary */}
       {debt && !settled && (
@@ -73,54 +81,61 @@ const ExpenseBalanceSummary: React.FC<ExpenseBalanceSummaryProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: COLORS.backgroundSecondary,
-    borderRadius: 12,
-    padding: SPACING.md,
     marginBottom: SPACING.md,
   },
-  title: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '700',
-    color: COLORS.text,
+  memberCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    padding: SPACING.md,
     marginBottom: SPACING.sm,
-  },
-  row: {
-    paddingVertical: SPACING.xs,
-    marginBottom: SPACING.xs,
-  },
-  nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.xs,
-    marginBottom: 2,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
-  name: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-    fontWeight: '500',
-  },
-  amountRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingLeft: 24,
+    marginRight: SPACING.md,
   },
-  amountLabel: {
+  memberInfo: {
+    flex: 1,
+  },
+  memberAmount: {
+    fontSize: FONT_SIZES.xxl,
+    fontWeight: '800',
+    color: COLORS.text,
+  },
+  memberName: {
     fontSize: FONT_SIZES.xs,
     color: COLORS.textMuted,
+    marginTop: 1,
   },
-  amount: {
-    fontSize: FONT_SIZES.md,
-    fontWeight: '700',
+  statusTag: {
+    alignSelf: 'flex-start',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    marginTop: 6,
+  },
+  statusTagText: {
+    fontSize: FONT_SIZES.xs,
+    fontWeight: '600',
   },
   debtCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.sm,
     backgroundColor: COLORS.primary + '10',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: SPACING.md,
-    marginTop: SPACING.sm,
+    marginTop: SPACING.xs,
   },
   debtText: {
     fontSize: FONT_SIZES.sm,
@@ -138,10 +153,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.sm,
-    backgroundColor: COLORS.success + '10',
-    borderRadius: 8,
+    backgroundColor: COLORS.successBg,
+    borderRadius: 12,
     padding: SPACING.md,
-    marginTop: SPACING.sm,
+    marginTop: SPACING.xs,
   },
   settledText: {
     fontSize: FONT_SIZES.sm,

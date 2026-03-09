@@ -17,7 +17,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwn }) => {
 
   return (
     <View style={[styles.container, isOwn ? styles.ownContainer : styles.otherContainer]}>
-      <Text style={[styles.senderName, isOwn && styles.ownSenderName]}>{message.senderName}</Text>
+      <Text style={styles.senderName}>{message.senderName}</Text>
       <View style={[styles.bubble, isOwn ? styles.ownBubble : styles.otherBubble]}>
         <Text style={[styles.messageText, isOwn ? styles.ownText : styles.otherText]}>
           {message.message}
@@ -43,31 +43,40 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   senderName: {
-    fontSize: FONT_SIZES.xs,
+    fontSize: 10,
     color: COLORS.textMuted,
-    marginBottom: 2,
-    marginLeft: SPACING.sm,
-  },
-  ownSenderName: {
-    textAlign: 'right',
-    marginRight: SPACING.sm,
-    marginLeft: 0,
+    marginBottom: 3,
+    marginHorizontal: SPACING.sm,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontWeight: '600',
   },
   bubble: {
-    borderRadius: 16,
+    borderRadius: 18,
     padding: SPACING.sm,
     paddingHorizontal: SPACING.md,
   },
   ownBubble: {
     backgroundColor: COLORS.primary,
-    borderBottomRightRadius: 4,
+    borderBottomRightRadius: 5,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
   },
   otherBubble: {
-    backgroundColor: COLORS.backgroundSecondary,
-    borderBottomLeftRadius: 4,
+    backgroundColor: COLORS.card,
+    borderBottomLeftRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   messageText: {
     fontSize: FONT_SIZES.md,
+    lineHeight: 22,
   },
   ownText: {
     color: COLORS.white,
@@ -76,15 +85,15 @@ const styles = StyleSheet.create({
     color: COLORS.text,
   },
   time: {
-    fontSize: FONT_SIZES.xs,
+    fontSize: 10,
     marginTop: 4,
     textAlign: 'right',
   },
   ownTime: {
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.5)',
   },
   otherTime: {
-    color: COLORS.textMuted,
+    color: COLORS.textLight,
   },
 });
 

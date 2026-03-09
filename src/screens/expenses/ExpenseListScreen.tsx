@@ -66,6 +66,7 @@ const ExpenseListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
           <View>
+            <Text style={styles.pageTitle}>{t('expenses.title', 'Gastos')}</Text>
             <ExpenseBalanceSummary balance={balance} memberNames={memberNames} debt={debt} settled={settled} />
             <View style={styles.filters}>
               {(['all', 'ordinary', 'extraordinary'] as const).map((f) => (
@@ -100,22 +101,40 @@ const ExpenseListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
+  pageTitle: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: COLORS.text,
+    letterSpacing: -0.5,
+    marginBottom: SPACING.md,
+  },
   list: { padding: SPACING.md, flexGrow: 1 },
   filters: { flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.md },
   filterChip: {
-    paddingVertical: SPACING.xs, paddingHorizontal: SPACING.md,
-    borderRadius: 20, borderWidth: 1, borderColor: COLORS.border,
+    paddingVertical: 7,
+    paddingHorizontal: SPACING.md,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.white,
   },
-  filterChipActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '10' },
-  filterText: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary },
-  filterTextActive: { color: COLORS.primary, fontWeight: '600' },
+  filterChipActive: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary,
+  },
+  filterText: { fontSize: FONT_SIZES.sm, color: COLORS.textMuted },
+  filterTextActive: { color: COLORS.white, fontWeight: '600' },
   fab: {
     position: 'absolute', right: SPACING.lg, bottom: SPACING.lg,
-    width: 56, height: 56, borderRadius: 28,
+    width: 50, height: 50, borderRadius: 15,
     backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center',
-    elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4,
+    elevation: 6,
+    shadowColor: 'rgba(139,26,58,0.4)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
   },
-  fabText: { color: COLORS.white, fontSize: 28, fontWeight: '300', marginTop: -2 },
+  fabText: { color: COLORS.white, fontSize: 26, fontWeight: '300', marginTop: -2 },
 });
 
 export default ExpenseListScreen;

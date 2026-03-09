@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  View, FlatList, TextInput, TouchableOpacity, Text, Alert, StyleSheet, KeyboardAvoidingView, Platform,
+  View, FlatList, TextInput, TouchableOpacity, Text, StyleSheet, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
@@ -16,7 +16,7 @@ const ChatScreen: React.FC = () => {
   const { t } = useTranslation();
   const { user, userData } = useAuth();
   const { currentAgreement } = useAgreement();
-  const { showToast } = useToast();
+  const { showToast, showConfirm } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -62,7 +62,7 @@ const ChatScreen: React.FC = () => {
 
   const handleHide = (messageId: string) => {
     if (!user) return;
-    Alert.alert(
+    showConfirm(
       t('chat.hideMessage'),
       t('chat.hideMessageConfirm'),
       [
@@ -85,7 +85,7 @@ const ChatScreen: React.FC = () => {
     if (!currentAgreement || !user) return;
 
     if (lockedBy) {
-      Alert.alert(
+      showConfirm(
         t('chat.unlockChat'),
         t('chat.unlockChatConfirm'),
         [
@@ -97,7 +97,7 @@ const ChatScreen: React.FC = () => {
         ]
       );
     } else {
-      Alert.alert(
+      showConfirm(
         t('chat.lockChat'),
         t('chat.lockChatConfirm'),
         [
@@ -198,32 +198,63 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   inputBar: {
-    flexDirection: 'row', alignItems: 'flex-end',
-    padding: SPACING.sm, borderTopWidth: 1, borderTopColor: COLORS.borderLight,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    padding: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
     backgroundColor: COLORS.white,
   },
   lockButton: {
-    padding: SPACING.sm,
-    marginRight: SPACING.xs,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SPACING.sm,
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   textInput: {
-    flex: 1, borderWidth: 1, borderColor: COLORS.border, borderRadius: 20,
-    paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
-    fontSize: FONT_SIZES.md, color: COLORS.text, maxHeight: 100,
+    flex: 1,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 22,
+    backgroundColor: COLORS.background,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    fontSize: FONT_SIZES.md,
+    color: COLORS.text,
+    maxHeight: 100,
   },
   lockedInput: {
-    flex: 1, borderRadius: 20, backgroundColor: COLORS.backgroundSecondary,
-    paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
+    flex: 1,
+    borderRadius: 22,
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
     justifyContent: 'center',
   },
   lockedInputText: {
     fontSize: FONT_SIZES.md, color: COLORS.textMuted, fontStyle: 'italic',
   },
   sendButton: {
-    backgroundColor: COLORS.primary, borderRadius: 20,
-    width: 38, height: 38,
-    justifyContent: 'center', alignItems: 'center',
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
+    width: 38,
+    height: 38,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginLeft: SPACING.sm,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   sendDisabled: { opacity: 0.5 },
 });

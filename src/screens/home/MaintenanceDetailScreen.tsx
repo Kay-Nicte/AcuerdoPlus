@@ -97,15 +97,15 @@ const MaintenanceDetailScreen: React.FC<{ route: any; navigation: any }> = ({ ro
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  content: { padding: SPACING.lg, paddingTop: SPACING.xl },
+  content: { padding: SPACING.lg, paddingTop: SPACING.xl, paddingBottom: 100 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.sm },
-  month: { fontSize: FONT_SIZES.xl, fontWeight: 'bold', color: COLORS.text },
-  minor: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginBottom: SPACING.sm },
+  month: { fontSize: FONT_SIZES.xl, fontWeight: '800', color: COLORS.text, letterSpacing: -0.5 },
+  minor: { fontSize: FONT_SIZES.md, color: COLORS.textMuted, marginBottom: SPACING.sm },
   amount: { fontSize: 36, fontWeight: '700', color: COLORS.primary, marginBottom: SPACING.lg },
-  label: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.textSecondary, marginBottom: SPACING.sm },
+  label: { fontSize: FONT_SIZES.sm, fontWeight: '500', color: COLORS.textMuted, marginBottom: SPACING.sm },
   proofSection: { marginBottom: SPACING.lg },
-  proofImage: { width: '100%', height: 200, borderRadius: 8, backgroundColor: COLORS.backgroundSecondary },
-  button: { backgroundColor: COLORS.success, padding: SPACING.md, borderRadius: 8, alignItems: 'center' },
+  proofImage: { width: '100%', height: 200, borderRadius: 16, backgroundColor: COLORS.card },
+  button: { backgroundColor: COLORS.success, padding: SPACING.md, borderRadius: 12, alignItems: 'center' },
   buttonText: { color: COLORS.white, fontSize: FONT_SIZES.md, fontWeight: '600' },
 });
 

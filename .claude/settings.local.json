@@ -31,7 +31,8 @@
       "Bash(grep:*)",
       "Bash(ls:*)",
       "Bash(npx expo:*)",
-      "Bash(npx eas:*)"
+      "Bash(npx eas:*)",
+      "Bash(npm uninstall:*)"
     ]
   }
 }

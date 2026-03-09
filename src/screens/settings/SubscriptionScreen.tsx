@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Switch, Alert, StyleSheet, ScrollView, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, Switch, StyleSheet, ScrollView, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
@@ -21,7 +21,7 @@ const SubscriptionScreen: React.FC = () => {
   const { user, userData } = useAuth();
   const { currentAgreement } = useAgreement();
   const { subscription, isPremium, activateSubscription, cancelSubscription } = useSubscription();
-  const { showToast } = useToast();
+  const { showToast, showConfirm } = useToast();
   const [loading, setLoading] = useState(false);
   const [splitPremium, setSplitPremium] = useState(true);
   const [redeemCode, setRedeemCode] = useState('');
@@ -65,7 +65,7 @@ const SubscriptionScreen: React.FC = () => {
   };
 
   const handleCancel = async () => {
-    Alert.alert(t('subscription.cancelSubscription'), t('subscription.cancelConfirm'), [
+    showConfirm(t('subscription.cancelSubscription'), t('subscription.cancelConfirm'), [
       { text: t('common.no'), style: 'cancel' },
       {
         text: t('subscription.cancelYes'),
@@ -216,20 +216,24 @@ const SubscriptionScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  content: { padding: SPACING.lg, paddingTop: SPACING.xl },
+  content: { padding: SPACING.lg, paddingTop: SPACING.xl, paddingBottom: 100 },
   title: { fontSize: FONT_SIZES.xxl, fontWeight: 'bold', color: COLORS.text, marginBottom: SPACING.lg },
-  currentPlan: { backgroundColor: COLORS.backgroundSecondary, borderRadius: 12, padding: SPACING.lg, marginBottom: SPACING.lg, alignItems: 'center' },
-  planLabel: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary },
+  currentPlan: {
+    backgroundColor: COLORS.card, borderRadius: 16, padding: SPACING.lg, marginBottom: SPACING.lg, alignItems: 'center',
+    shadowColor: '#110810', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3,
+  },
+  planLabel: { fontSize: FONT_SIZES.sm, fontWeight: '500', color: COLORS.textMuted },
   planName: { fontSize: FONT_SIZES.xxl, fontWeight: '700', color: COLORS.primary, marginTop: SPACING.xs },
   planDate: { fontSize: FONT_SIZES.sm, color: COLORS.textMuted, marginTop: SPACING.xs },
-  sectionTitle: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.text, marginBottom: SPACING.sm, marginTop: SPACING.md },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: COLORS.text, marginBottom: SPACING.sm, marginTop: SPACING.md, letterSpacing: -0.5 },
   featureList: { marginBottom: SPACING.lg },
   featureRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: SPACING.xs },
   featureCheck: { color: COLORS.success, fontSize: FONT_SIZES.md, marginRight: SPACING.sm, fontWeight: '700' },
   featureText: { fontSize: FONT_SIZES.md, color: COLORS.text },
   planCard: {
-    borderWidth: 2, borderColor: COLORS.border, borderRadius: 12, padding: SPACING.lg,
+    backgroundColor: COLORS.card, borderWidth: 2, borderColor: COLORS.border, borderRadius: 16, padding: SPACING.lg,
     alignItems: 'center', marginBottom: SPACING.md,
+    shadowColor: '#110810', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3,
   },
   planCardHighlight: { borderColor: COLORS.primary, backgroundColor: COLORS.primary },
   planCardTitle: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.text },
@@ -238,8 +242,9 @@ const styles = StyleSheet.create({
   savingsAlt: { fontSize: FONT_SIZES.sm, color: COLORS.success, fontWeight: '600', marginTop: SPACING.sm },
   splitRow: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.backgroundSecondary, borderRadius: 12,
+    backgroundColor: COLORS.card, borderRadius: 16,
     padding: SPACING.md, marginBottom: SPACING.lg,
+    shadowColor: '#110810', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3,
   },
   splitTitle: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.text },
   splitSubtitle: { fontSize: FONT_SIZES.xs, color: COLORS.textMuted, marginTop: 2 },
@@ -247,11 +252,11 @@ const styles = StyleSheet.create({
   redeemSection: { marginTop: SPACING.lg, alignItems: 'center' },
   redeemLink: { color: COLORS.primary, fontSize: FONT_SIZES.sm, fontWeight: '600', textDecorationLine: 'underline' },
   redeemBox: { width: '100%' },
-  redeemLabel: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.textSecondary, marginBottom: SPACING.xs },
-  redeemInput: { borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: SPACING.md, fontSize: FONT_SIZES.md, color: COLORS.text, marginBottom: SPACING.sm },
-  redeemButton: { backgroundColor: COLORS.primary, padding: SPACING.md, borderRadius: 8, alignItems: 'center' },
+  redeemLabel: { fontSize: FONT_SIZES.sm, fontWeight: '500', color: COLORS.textMuted, marginBottom: SPACING.xs },
+  redeemInput: { borderWidth: 1, borderColor: COLORS.border, borderRadius: 12, padding: SPACING.md, fontSize: FONT_SIZES.md, color: COLORS.text, backgroundColor: COLORS.card, marginBottom: SPACING.sm },
+  redeemButton: { backgroundColor: COLORS.primary, padding: 14, borderRadius: 12, alignItems: 'center' },
   redeemButtonText: { color: COLORS.white, fontSize: FONT_SIZES.md, fontWeight: '600' },
-  cancelButton: { backgroundColor: COLORS.error + '10', padding: SPACING.md, borderRadius: 8, alignItems: 'center', marginTop: SPACING.lg },
+  cancelButton: { backgroundColor: 'transparent', padding: 14, borderRadius: 12, alignItems: 'center', marginTop: SPACING.lg },
   cancelText: { color: COLORS.error, fontSize: FONT_SIZES.md, fontWeight: '600' },
 });
 

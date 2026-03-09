@@ -69,12 +69,12 @@ const MaintenanceListScreen: React.FC<{ route: any; navigation: any }> = ({ rout
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  list: { padding: SPACING.md, flexGrow: 1 },
+  list: { padding: SPACING.md, paddingBottom: 100, flexGrow: 1 },
   fab: {
     position: 'absolute', right: SPACING.lg, bottom: SPACING.lg,
     width: 56, height: 56, borderRadius: 28,
     backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center',
-    elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4,
+    elevation: 3, shadowColor: '#110810', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 12,
   },
   fabText: { color: COLORS.white, fontSize: 28, fontWeight: '300', marginTop: -2 },
 });

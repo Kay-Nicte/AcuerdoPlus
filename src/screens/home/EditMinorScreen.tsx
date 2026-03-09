@@ -243,10 +243,10 @@ const EditMinorScreen: React.FC<{ route: any; navigation: any }> = ({ route, nav
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  content: { padding: SPACING.lg, paddingTop: SPACING.xl },
-  title: { fontSize: FONT_SIZES.xl, fontWeight: 'bold', color: COLORS.text, marginBottom: SPACING.lg },
-  label: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.textSecondary, marginBottom: SPACING.xs, marginTop: SPACING.md },
-  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: SPACING.md, fontSize: FONT_SIZES.md, color: COLORS.text },
+  content: { padding: SPACING.lg, paddingTop: SPACING.xl, paddingBottom: 100 },
+  title: { fontSize: FONT_SIZES.xl, fontWeight: '800', color: COLORS.text, letterSpacing: -0.5, marginBottom: SPACING.lg },
+  label: { fontSize: FONT_SIZES.sm, fontWeight: '500', color: COLORS.textMuted, marginBottom: SPACING.xs, marginTop: SPACING.md },
+  input: { borderWidth: 1, borderColor: COLORS.border, borderRadius: 12, padding: SPACING.md, fontSize: FONT_SIZES.md, color: COLORS.text, backgroundColor: COLORS.card },
   clearDateButton: { marginTop: SPACING.sm },
   clearDateText: { color: COLORS.error, fontSize: FONT_SIZES.sm },
   hint: { fontSize: FONT_SIZES.xs, color: COLORS.textMuted, marginBottom: SPACING.sm },
@@ -254,17 +254,17 @@ const styles = StyleSheet.create({
   configSection: { marginTop: SPACING.md, paddingTop: SPACING.md, borderTopWidth: 1, borderTopColor: COLORS.borderLight },
   optionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.sm },
   modelCard: {
-    borderWidth: 1, borderColor: COLORS.border, borderRadius: 10,
+    borderWidth: 1, borderColor: COLORS.border, borderRadius: 12,
     padding: SPACING.md,
   },
   modelCardSelected: {
-    borderColor: COLORS.primary, backgroundColor: COLORS.primary + '10',
+    borderColor: COLORS.primary, backgroundColor: COLORS.primaryPale,
   },
   modelTitle: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.text },
   modelTitleSelected: { color: COLORS.primary },
   modelDesc: { fontSize: FONT_SIZES.xs, color: COLORS.textMuted, marginTop: 2 },
   modelDescSelected: { color: COLORS.primary },
-  button: { backgroundColor: COLORS.primary, padding: SPACING.md, borderRadius: 8, alignItems: 'center', marginTop: SPACING.xl },
+  button: { backgroundColor: COLORS.primary, padding: SPACING.md, borderRadius: 12, alignItems: 'center', marginTop: SPACING.xl },
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: COLORS.white, fontSize: FONT_SIZES.md, fontWeight: '600' },
 });

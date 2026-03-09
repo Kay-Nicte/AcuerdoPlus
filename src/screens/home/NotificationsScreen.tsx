@@ -149,7 +149,7 @@ const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         data={notifications}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        contentContainerStyle={notifications.length === 0 ? styles.center : undefined}
+        contentContainerStyle={notifications.length === 0 ? styles.center : { paddingBottom: 100, paddingTop: SPACING.sm }}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="notifications-outline" size={48} color={COLORS.textMuted} />
@@ -187,12 +187,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderLight,
-    backgroundColor: COLORS.white,
+    marginHorizontal: SPACING.md,
+    marginBottom: SPACING.sm,
+    backgroundColor: COLORS.card,
+    borderRadius: 16,
+    shadowColor: '#110810',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 3,
   },
   notifUnread: {
-    backgroundColor: COLORS.primary + '08',
+    backgroundColor: COLORS.primaryPale,
   },
   iconStyle: {
     marginRight: SPACING.md,
@@ -210,7 +216,7 @@ const styles = StyleSheet.create({
   },
   notifBody: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+    color: COLORS.textMuted,
     marginBottom: 4,
   },
   notifTime: {
@@ -233,14 +239,15 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   emptyTitle: {
-    fontSize: FONT_SIZES.lg,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '800',
     color: COLORS.text,
+    letterSpacing: -0.5,
     marginBottom: SPACING.xs,
   },
   emptySubtitle: {
     fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
+    color: COLORS.textMuted,
     textAlign: 'center',
     paddingHorizontal: SPACING.xl,
   },

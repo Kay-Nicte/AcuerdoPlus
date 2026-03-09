@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, KeyboardAvoidingView, Platform, ScrollView,
+  View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
@@ -16,7 +16,7 @@ const AddMinorScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user, userData } = useAuth();
   const { currentAgreement } = useAgreement();
   const { isPremium } = useSubscription();
-  const { showToast } = useToast();
+  const { showToast, showConfirm } = useToast();
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
@@ -37,7 +37,7 @@ const AddMinorScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     }
 
     if (!isPremium && currentMinorCount >= 1) {
-      Alert.alert(
+      showConfirm(
         t('minors.freePlanLimit'),
         t('minors.freePlanLimitDesc'),
         [
@@ -111,32 +111,35 @@ const styles = StyleSheet.create({
   content: {
     padding: SPACING.lg,
     paddingTop: SPACING.xl,
+    paddingBottom: 100,
   },
   title: {
     fontSize: FONT_SIZES.xl,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: COLORS.text,
+    letterSpacing: -0.5,
     marginBottom: SPACING.lg,
   },
   label: {
     fontSize: FONT_SIZES.sm,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
+    fontWeight: '500',
+    color: COLORS.textMuted,
     marginBottom: SPACING.xs,
     marginTop: SPACING.md,
   },
   input: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 8,
+    borderRadius: 12,
     padding: SPACING.md,
     fontSize: FONT_SIZES.md,
     color: COLORS.text,
+    backgroundColor: COLORS.card,
   },
   button: {
     backgroundColor: COLORS.primary,
     padding: SPACING.md,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     marginTop: SPACING.xl,
   },

@@ -1,6 +1,6 @@
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import * as Localization from 'expo-localization';
+import { Platform, NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import es from './es';
 import en from './en';
@@ -28,27 +28,40 @@ export const setStoredLanguage = async (lang: string | null): Promise<void> => {
 };
 
 const getDeviceLanguage = (): string => {
-  const locale = Localization.getLocales()?.[0]?.languageCode ?? 'en';
-  return locale === 'es' ? 'es' : 'en';
+  try {
+    let locale = 'en';
+    if (Platform.OS === 'ios') {
+      locale = NativeModules.SettingsManager?.settings?.AppleLocale
+        || NativeModules.SettingsManager?.settings?.AppleLanguages?.[0]
+        || 'en';
+    } else {
+      locale = NativeModules.I18nManager?.localeIdentifier || 'en';
+    }
+    return locale.startsWith('es') ? 'es' : 'en';
+  } catch {
+    return 'en';
+  }
 };
 
-const initI18n = async () => {
-  const stored = await getStoredLanguage();
-  const lng = stored ?? getDeviceLanguage();
+// Initialize synchronously with device language
+i18next.use(initReactI18next).init({
+  resources: {
+    es: { translation: es },
+    en: { translation: en },
+  },
+  lng: getDeviceLanguage(),
+  fallbackLng: 'en',
+  interpolation: {
+    escapeValue: false,
+  },
+  initImmediate: false,
+});
 
-  await i18next.use(initReactI18next).init({
-    resources: {
-      es: { translation: es },
-      en: { translation: en },
-    },
-    lng,
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false,
-    },
-  });
-};
-
-initI18n();
+// Then load stored preference and override if needed
+getStoredLanguage().then((stored) => {
+  if (stored && stored !== i18next.language) {
+    i18next.changeLanguage(stored);
+  }
+});
 
 export default i18next;

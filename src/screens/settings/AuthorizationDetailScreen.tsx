@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, Image, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -15,7 +15,7 @@ const AuthorizationDetailScreen: React.FC<{ route: any; navigation: any }> = ({ 
   const { t } = useTranslation();
   const { authorizationId } = route.params;
   const { user, userData } = useAuth();
-  const { showToast } = useToast();
+  const { showToast, showConfirm } = useToast();
   const [auth, setAuth] = useState<Authorization | null>(null);
   const [minorName, setMinorName] = useState('');
   const [memberStatuses, setMemberStatuses] = useState<{ name: string; status: boolean | null }[]>([]);
@@ -62,7 +62,7 @@ const AuthorizationDetailScreen: React.FC<{ route: any; navigation: any }> = ({ 
       ? t('authz.revokeConfirmOther')
       : t('authz.revokeConfirmSelf');
 
-    Alert.alert(t('authz.revoke'), message, [
+    showConfirm(t('authz.revoke'), message, [
       { text: t('common.cancel'), style: 'cancel' },
       {
         text: isSecondVote ? t('authz.confirmRevocation') : t('authz.requestRevocation'),
@@ -198,29 +198,32 @@ const AuthorizationDetailScreen: React.FC<{ route: any; navigation: any }> = ({ 
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  content: { padding: SPACING.lg, paddingTop: SPACING.xl },
+  content: { padding: SPACING.lg, paddingTop: SPACING.xl, paddingBottom: 100 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.sm },
   title: { fontSize: FONT_SIZES.xl, fontWeight: 'bold', color: COLORS.text, flex: 1, marginRight: SPACING.sm },
   description: { fontSize: FONT_SIZES.md, color: COLORS.textSecondary, marginBottom: SPACING.lg },
-  infoCard: { backgroundColor: COLORS.backgroundSecondary, borderRadius: 12, padding: SPACING.md, marginBottom: SPACING.lg },
+  infoCard: {
+    backgroundColor: COLORS.card, borderRadius: 16, padding: SPACING.md, marginBottom: SPACING.lg,
+    shadowColor: '#110810', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3,
+  },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: SPACING.sm },
-  label: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary },
+  label: { fontSize: FONT_SIZES.sm, fontWeight: '500', color: COLORS.textMuted },
   value: { fontSize: FONT_SIZES.sm, fontWeight: '600', color: COLORS.text },
-  sectionTitle: { fontSize: FONT_SIZES.lg, fontWeight: '700', color: COLORS.text, marginBottom: SPACING.sm },
-  memberRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: SPACING.sm, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: COLORS.text, marginBottom: SPACING.sm, letterSpacing: -0.5 },
+  memberRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: SPACING.sm, borderBottomWidth: 1, borderBottomColor: COLORS.border },
   memberName: { fontSize: FONT_SIZES.md, color: COLORS.text },
   memberStatus: { fontSize: FONT_SIZES.sm, fontWeight: '600' },
-  docImage: { width: '100%', height: 150, borderRadius: 8, backgroundColor: COLORS.backgroundSecondary, marginBottom: SPACING.sm },
+  docImage: { width: '100%', height: 150, borderRadius: 12, backgroundColor: COLORS.backgroundSecondary, marginBottom: SPACING.sm },
   actions: { flexDirection: 'row', gap: SPACING.md, marginTop: SPACING.lg },
-  approveBtn: { flex: 1, backgroundColor: COLORS.success, padding: SPACING.md, borderRadius: 8, alignItems: 'center' },
-  rejectBtn: { flex: 1, backgroundColor: COLORS.error, padding: SPACING.md, borderRadius: 8, alignItems: 'center' },
+  approveBtn: { flex: 1, backgroundColor: COLORS.success, padding: 14, borderRadius: 12, alignItems: 'center' },
+  rejectBtn: { flex: 1, backgroundColor: COLORS.error, padding: 14, borderRadius: 12, alignItems: 'center' },
   actionText: { color: COLORS.white, fontSize: FONT_SIZES.md, fontWeight: '600' },
-  revokeBtn: { backgroundColor: COLORS.error + '10', padding: SPACING.md, borderRadius: 8, alignItems: 'center', marginTop: SPACING.lg },
+  revokeBtn: { backgroundColor: 'transparent', padding: 14, borderRadius: 12, alignItems: 'center', marginTop: SPACING.lg },
   revokeText: { color: COLORS.error, fontSize: FONT_SIZES.md, fontWeight: '600' },
   revocationNote: { fontSize: FONT_SIZES.sm, color: COLORS.warning, textAlign: 'center', marginTop: SPACING.md, fontStyle: 'italic' },
-  cancelRevokeBtn: { padding: SPACING.md, borderRadius: 8, alignItems: 'center', marginTop: SPACING.sm },
+  cancelRevokeBtn: { padding: 14, borderRadius: 12, alignItems: 'center', marginTop: SPACING.sm },
   cancelRevokeText: { color: COLORS.textMuted, fontSize: FONT_SIZES.sm },
-  calendarBtn: { backgroundColor: COLORS.info + '15', padding: SPACING.md, borderRadius: 8, alignItems: 'center', marginTop: SPACING.lg },
+  calendarBtn: { backgroundColor: COLORS.info + '15', padding: 14, borderRadius: 12, alignItems: 'center', marginTop: SPACING.lg },
   calendarBtnText: { color: COLORS.info, fontSize: FONT_SIZES.md, fontWeight: '600' },
   calendarNote: { fontSize: FONT_SIZES.sm, color: COLORS.success, textAlign: 'center', marginTop: SPACING.lg, fontStyle: 'italic' },
 });

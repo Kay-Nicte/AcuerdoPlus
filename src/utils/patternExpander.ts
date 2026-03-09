@@ -18,6 +18,72 @@ export function expandPattern(
     return [];
   }
 
+  // Dispatch to the right expander based on mode
+  if (rule.mode === 'weekdays' && rule.weekdayAssignments) {
+    return expandWeekdayPattern(event, rule, rangeStart, rangeEnd);
+  }
+  return expandAlternatingPattern(event, rule, rangeStart, rangeEnd);
+}
+
+/**
+ * Weekday mode: each day of the week is assigned to a specific parent.
+ * Generates one event per day within range.
+ */
+function expandWeekdayPattern(
+  event: CalendarEvent,
+  rule: PatternRule,
+  rangeStart: Date,
+  rangeEnd: Date
+): CalendarEvent[] {
+  const instances: CalendarEvent[] = [];
+  const patternStart = new Date(event.startDate);
+  patternStart.setHours(0, 0, 0, 0);
+  const patternEnd = rule.endDate ? new Date(rule.endDate) : null;
+
+  // Start from whichever is later: pattern start or range start
+  let current = new Date(Math.max(patternStart.getTime(), rangeStart.getTime()));
+  current.setHours(0, 0, 0, 0);
+
+  const maxIterations = 400;
+  let iterations = 0;
+
+  while (current <= rangeEnd && iterations < maxIterations) {
+    iterations++;
+
+    if (patternEnd && current > patternEnd) break;
+
+    const dayOfWeek = current.getDay(); // 0=Sun..6=Sat
+    const assignedTo = rule.weekdayAssignments![dayOfWeek];
+
+    if (assignedTo) {
+      const dateISO = formatISO(current);
+      instances.push({
+        ...event,
+        id: `${event.id}_${dateISO}`,
+        startDate: new Date(current),
+        endDate: new Date(current),
+        assignedTo,
+        isPattern: false,
+        requiresApproval: false,
+        approvalStatus: undefined,
+      });
+    }
+
+    current = addDays(current, 1);
+  }
+
+  return instances;
+}
+
+/**
+ * Alternating mode: parents take turns for durationDays at a time.
+ */
+function expandAlternatingPattern(
+  event: CalendarEvent,
+  rule: PatternRule,
+  rangeStart: Date,
+  rangeEnd: Date
+): CalendarEvent[] {
   const instances: CalendarEvent[] = [];
   const patternStart = new Date(event.startDate);
   patternStart.setHours(0, 0, 0, 0);
@@ -26,7 +92,6 @@ export function expandPattern(
   const cycleDays = getCycleDays(rule);
   const durationMs = rule.durationDays * 24 * 60 * 60 * 1000;
 
-  // Walk through cycles starting from the pattern's start date
   let cycleIndex = 0;
   let currentStart = new Date(patternStart);
 
@@ -39,19 +104,16 @@ export function expandPattern(
     currentStart = addDays(patternStart, cyclesToSkip * cycleDays);
   }
 
-  // Generate instances within range (cap at 200 to prevent runaway)
   const maxIterations = 200;
   let iterations = 0;
 
   while (currentStart <= rangeEnd && iterations < maxIterations) {
     iterations++;
 
-    // Check pattern end boundary
     if (patternEnd && currentStart > patternEnd) break;
 
     const instanceEnd = new Date(currentStart.getTime() + durationMs - 24 * 60 * 60 * 1000);
 
-    // Only include if the instance overlaps with the visible range
     if (instanceEnd >= rangeStart && currentStart <= rangeEnd) {
       const dateISO = formatISO(currentStart);
       const assignedTo = rule.alternating
@@ -64,13 +126,12 @@ export function expandPattern(
         startDate: new Date(currentStart),
         endDate: new Date(instanceEnd),
         assignedTo,
-        isPattern: false, // instances are not patterns themselves
+        isPattern: false,
         requiresApproval: false,
         approvalStatus: undefined,
       });
     }
 
-    // Advance to next cycle
     currentStart = addDays(currentStart, cycleDays);
     cycleIndex++;
   }

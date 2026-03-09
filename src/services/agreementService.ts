@@ -170,4 +170,13 @@ export const agreementService = {
       throw new Error(error.message);
     }
   },
+
+  async setMemberColor(agreementId: string, uid: string, color: string): Promise<void> {
+    const agreementDoc = await getDoc(doc(db, 'agreements', agreementId));
+    if (!agreementDoc.exists()) throw new Error('Acuerdo no encontrado');
+    const data = agreementDoc.data();
+    const memberColors = data.memberColors || {};
+    memberColors[uid] = color;
+    await updateDoc(doc(db, 'agreements', agreementId), { memberColors });
+  },
 };
