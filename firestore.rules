@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Usuarios: cada uno solo lee/escribe su propio documento
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Acuerdos: miembros pueden leer/actualizar, cualquier autenticado puede crear
+    match /agreements/{agreementId} {
+      allow read: if request.auth != null
+                  && (request.auth.uid in resource.data.members
+                      || resource.data.inviteCode != null);
+      allow create: if request.auth != null;
+      allow update: if request.auth != null
+                    && request.auth.uid in resource.data.members;
+    }
+
+    // Suscripciones: miembros del acuerdo pueden leer/escribir
+    match /subscriptions/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Menores: miembros del acuerdo
+    match /minors/{minorId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Manutencion
+    match /maintenance/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Gastos
+    match /expenses/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Eventos de calendario
+    match /calendarEvents/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Mensajes de chat
+    match /chatMessages/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Chat locks
+    match /chatLocks/{agreementId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Historico
+    match /history/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Autorizaciones
+    match /authorizations/{docId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

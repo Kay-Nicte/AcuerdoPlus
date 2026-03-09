@@ -50,12 +50,12 @@ export const calendarService = {
       createdAt: new Date(),
     };
 
-    const docData: any = {
-      ...event,
-      startDate: Timestamp.fromDate(data.startDate),
-      endDate: Timestamp.fromDate(data.endDate),
-      createdAt: Timestamp.fromDate(event.createdAt),
-    };
+    const docData: any = Object.fromEntries(
+      Object.entries(event).filter(([_, v]) => v !== undefined)
+    );
+    docData.startDate = Timestamp.fromDate(data.startDate);
+    docData.endDate = Timestamp.fromDate(data.endDate);
+    docData.createdAt = Timestamp.fromDate(event.createdAt);
     if (expiresAt) {
       docData.approvalExpiresAt = Timestamp.fromDate(expiresAt);
     }

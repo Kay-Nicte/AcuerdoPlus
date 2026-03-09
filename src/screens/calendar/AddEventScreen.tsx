@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView,
+  View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useAgreement } from '../../context/AgreementContext';
 import { calendarService } from '../../services/calendarService';
@@ -11,6 +13,7 @@ import { authorizationService } from '../../services/authorizationService';
 import { Minor, PatternRule } from '../../types';
 import DatePickerField from '../../components/common/DatePickerField';
 import { useSubscription } from '../../context/SubscriptionContext';
+import { useToast } from '../../context/ToastContext';
 import { COLORS, SPACING, FONT_SIZES } from '../../config/theme';
 
 const AddEventScreen: React.FC<{ route: any; navigation: any }> = ({ route, navigation }) => {
@@ -20,9 +23,11 @@ const AddEventScreen: React.FC<{ route: any; navigation: any }> = ({ route, navi
   const prefillMinorId: string = route.params?.prefillMinorId || '';
   const initialDate = preDateStr ? new Date(preDateStr + 'T00:00:00') : new Date();
 
+  const { t } = useTranslation();
   const { user, userData } = useAuth();
   const { currentAgreement } = useAgreement();
   const { isPremium } = useSubscription();
+  const { showToast } = useToast();
   const [minors, setMinors] = useState<Minor[]>([]);
   const [members, setMembers] = useState<{ uid: string; name: string }[]>([]);
 
@@ -58,8 +63,8 @@ const AddEventScreen: React.FC<{ route: any; navigation: any }> = ({ route, navi
   };
 
   const handleSave = async () => {
-    if (!selectedMinorId) { Alert.alert('Error', 'Selecciona un menor'); return; }
-    if (!title.trim()) { Alert.alert('Error', 'El título es obligatorio'); return; }
+    if (!selectedMinorId) { showToast(t('calendar.selectMinor'), 'error'); return; }
+    if (!title.trim()) { showToast(t('calendar.titleRequired'), 'error'); return; }
     if (!currentAgreement || !user) return;
 
     try {
@@ -93,14 +98,14 @@ const AddEventScreen: React.FC<{ route: any; navigation: any }> = ({ route, navi
         createdByName: userData?.displayName || 'Usuario',
         requiresApproval: isPattern ? false : currentAgreement.approvalMode,
         isPattern: isPattern && isPremium,
-        patternRule,
+        ...(patternRule ? { patternRule } : {}),
       });
       if (authorizationId) {
         await authorizationService.linkToCalendar(authorizationId, event.id);
       }
       navigation.goBack();
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      showToast(error.message, 'error');
     } finally {
       setSaving(false);
     }
@@ -108,41 +113,54 @@ const AddEventScreen: React.FC<{ route: any; navigation: any }> = ({ route, navi
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Nuevo evento</Text>
+      <Text style={styles.title}>{t('calendar.newEvent')}</Text>
 
-      <Text style={styles.label}>Menor</Text>
-      <View style={styles.optionsRow}>
-        {minors.map((m) => (
-          <TouchableOpacity key={m.id} style={[styles.option, selectedMinorId === m.id && styles.optionSelected]} onPress={() => setSelectedMinorId(m.id)}>
-            <Text style={[styles.optionText, selectedMinorId === m.id && styles.optionTextSelected]}>{m.name}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <Text style={styles.label}>{t('calendar.minor')}</Text>
+      {minors.length === 0 ? (
+        <TouchableOpacity
+          style={styles.noMinorsCard}
+          onPress={() => navigation.getParent()?.navigate('Inicio', { screen: 'AddMinor' })}
+        >
+          <Ionicons name="alert-circle-outline" size={20} color={COLORS.warning} />
+          <Text style={styles.noMinorsText}>
+            {t('calendar.needMinorFirst')}
+          </Text>
+          <Text style={styles.noMinorsLink}>{t('calendar.addMinorAction')}</Text>
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.optionsRow}>
+          {minors.map((m) => (
+            <TouchableOpacity key={m.id} style={[styles.option, selectedMinorId === m.id && styles.optionSelected]} onPress={() => setSelectedMinorId(m.id)}>
+              <Text style={[styles.optionText, selectedMinorId === m.id && styles.optionTextSelected]}>{m.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
-      <Text style={styles.label}>Título</Text>
-      <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="Título del evento" placeholderTextColor={COLORS.textMuted} />
+      <Text style={styles.label}>{t('calendar.eventTitle')}</Text>
+      <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder={t('calendar.eventTitlePlaceholder')} placeholderTextColor={COLORS.textMuted} />
 
       <DatePickerField
-        label="Fecha inicio"
+        label={t('calendar.startDate')}
         value={startDate}
         onChange={(d) => {
           setStartDate(d);
           if (d > endDate) setEndDate(d);
         }}
-        placeholder="Seleccionar fecha"
+        placeholder={t('common.selectDate')}
       />
 
       <DatePickerField
-        label="Fecha fin"
+        label={t('calendar.endDate')}
         value={endDate}
         onChange={setEndDate}
         minimumDate={startDate}
-        placeholder="Seleccionar fecha"
+        placeholder={t('common.selectDate')}
       />
 
       {!isPattern && (
         <>
-          <Text style={styles.label}>Asignado a</Text>
+          <Text style={styles.label}>{t('calendar.assignedTo')}</Text>
           <View style={styles.optionsRow}>
             {members.map((m) => (
               <TouchableOpacity key={m.uid} style={[styles.option, assignedTo === m.uid && styles.optionSelected]} onPress={() => setAssignedTo(m.uid)}>
@@ -163,34 +181,34 @@ const AddEventScreen: React.FC<{ route: any; navigation: any }> = ({ route, navi
           }}
         >
           <View style={[styles.checkbox, isPattern && styles.checkboxChecked]}>
-            {isPattern && <Text style={styles.checkmark}>✓</Text>}
+            {isPattern && <Ionicons name="checkmark" size={14} color="#fff" />}
           </View>
-          <Text style={styles.patternToggleText}>Patrón de custodia</Text>
+          <Text style={styles.patternToggleText}>{t('calendar.custodyPattern')}</Text>
         </TouchableOpacity>
 
         {!isPremium && (
           <View style={styles.premiumNote}>
             <Text style={styles.premiumNoteText}>
-              Patrones de custodia disponibles con Premium
+              {t('calendar.premiumPatterns')}
             </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Subscription')}>
-              <Text style={styles.premiumLink}>Ver planes</Text>
+              <Text style={styles.premiumLink}>{t('calendar.viewPlans')}</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {isPattern && isPremium && (
           <View style={styles.patternOptions}>
-            <Text style={styles.label}>Frecuencia</Text>
+            <Text style={styles.label}>{t('calendar.frequency')}</Text>
             <View style={styles.optionsRow}>
-              {([['weekly', 'Semanal'], ['biweekly', 'Quincenal'], ['monthly', 'Mensual']] as const).map(([val, label]) => (
+              {([['weekly', t('calendar.weekly')], ['biweekly', t('calendar.biweekly')], ['monthly', t('calendar.monthly')]] as const).map(([val, label]) => (
                 <TouchableOpacity key={val} style={[styles.option, frequency === val && styles.optionSelected]} onPress={() => setFrequency(val)}>
                   <Text style={[styles.optionText, frequency === val && styles.optionTextSelected]}>{label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={styles.label}>Días por turno</Text>
+            <Text style={styles.label}>{t('calendar.daysPerTurn')}</Text>
             <TextInput
               style={styles.input}
               value={durationDays}
@@ -200,7 +218,7 @@ const AddEventScreen: React.FC<{ route: any; navigation: any }> = ({ route, navi
               placeholderTextColor={COLORS.textMuted}
             />
 
-            <Text style={styles.label}>Empieza</Text>
+            <Text style={styles.label}>{t('calendar.startsAt')}</Text>
             <View style={styles.optionsRow}>
               {members.map((m) => (
                 <TouchableOpacity key={m.uid} style={[styles.option, startsFirst === m.uid && styles.optionSelected]} onPress={() => setStartsFirst(m.uid)}>
@@ -210,11 +228,11 @@ const AddEventScreen: React.FC<{ route: any; navigation: any }> = ({ route, navi
             </View>
 
             <DatePickerField
-              label="Fecha fin del patrón (opcional)"
+              label={t('calendar.patternEndDate')}
               value={patternEndDate}
               onChange={(d) => setPatternEndDate(d)}
               minimumDate={startDate}
-              placeholder="Sin fecha fin"
+              placeholder={t('calendar.noEndDate')}
             />
           </View>
         )}
@@ -222,12 +240,12 @@ const AddEventScreen: React.FC<{ route: any; navigation: any }> = ({ route, navi
 
       {currentAgreement?.approvalMode && !isPattern && (
         <View style={styles.approvalNote}>
-          <Text style={styles.approvalText}>Modo aprobación activo: el evento requerirá aprobación del otro miembro.</Text>
+          <Text style={styles.approvalText}>{t('calendar.approvalModeNote')}</Text>
         </View>
       )}
 
       <TouchableOpacity style={[styles.button, saving && styles.buttonDisabled]} onPress={handleSave} disabled={saving}>
-        <Text style={styles.buttonText}>{saving ? 'Guardando...' : 'Guardar'}</Text>
+        <Text style={styles.buttonText}>{saving ? t('common.saving') : t('common.save')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -259,6 +277,13 @@ const styles = StyleSheet.create({
   premiumNote: { backgroundColor: COLORS.info + '15', borderRadius: 8, padding: SPACING.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   premiumNoteText: { fontSize: FONT_SIZES.sm, color: COLORS.info, flex: 1 },
   premiumLink: { fontSize: FONT_SIZES.sm, color: COLORS.primary, fontWeight: '600', marginLeft: SPACING.sm },
+  noMinorsCard: {
+    flexDirection: 'column', alignItems: 'center', gap: SPACING.sm,
+    padding: SPACING.lg, borderWidth: 1, borderColor: COLORS.warning + '40',
+    borderRadius: 8, backgroundColor: COLORS.warning + '08',
+  },
+  noMinorsText: { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary, textAlign: 'center' },
+  noMinorsLink: { fontSize: FONT_SIZES.sm, color: COLORS.primary, fontWeight: '600' },
 });
 
 export default AddEventScreen;

@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, FlatList, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { useAgreement } from '../../context/AgreementContext';
 import { historyService } from '../../services/historyService';
 import { HistoryEntry } from '../../types';
@@ -12,26 +13,27 @@ import { COLORS, SPACING, FONT_SIZES } from '../../config/theme';
 
 type EntityType = HistoryEntry['entityType'];
 
-const ENTITY_CONFIG: Record<EntityType, { icon: keyof typeof Ionicons.glyphMap; color: string; label: string }> = {
-  minor: { icon: 'people', color: COLORS.info, label: 'Menores' },
-  maintenance: { icon: 'wallet', color: COLORS.success, label: 'Manutención' },
-  expense: { icon: 'receipt', color: COLORS.warning, label: 'Gastos' },
-  calendar: { icon: 'calendar', color: COLORS.primary, label: 'Calendario' },
-  authorization: { icon: 'shield-checkmark', color: '#9C27B0', label: 'Autorizaciones' },
-  agreement: { icon: 'document-text', color: COLORS.primaryDark, label: 'Acuerdo' },
-  chat: { icon: 'chatbubbles', color: '#00BCD4', label: 'Chat' },
-};
-
-const FILTER_OPTIONS: { key: EntityType | 'all'; label: string }[] = [
-  { key: 'all', label: 'Todos' },
-  ...Object.entries(ENTITY_CONFIG).map(([key, val]) => ({ key: key as EntityType, label: val.label })),
-];
-
 const HistoryScreen: React.FC = () => {
+  const { t } = useTranslation();
   const { currentAgreement } = useAgreement();
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [filter, setFilter] = useState<EntityType | 'all'>('all');
   const [loading, setLoading] = useState(true);
+
+  const ENTITY_CONFIG: Record<EntityType, { icon: keyof typeof Ionicons.glyphMap; color: string; label: string }> = {
+    minor: { icon: 'people', color: COLORS.info, label: t('history.minors') },
+    maintenance: { icon: 'wallet', color: COLORS.success, label: t('history.maintenance') },
+    expense: { icon: 'receipt', color: COLORS.warning, label: t('history.expenses') },
+    calendar: { icon: 'calendar', color: COLORS.primary, label: t('history.calendar') },
+    authorization: { icon: 'shield-checkmark', color: '#9C27B0', label: t('history.authorizations') },
+    agreement: { icon: 'document-text', color: COLORS.primaryDark, label: t('history.agreement') },
+    chat: { icon: 'chatbubbles', color: '#00BCD4', label: t('history.chat') },
+  };
+
+  const FILTER_OPTIONS: { key: EntityType | 'all'; label: string }[] = [
+    { key: 'all', label: t('common.all') },
+    ...Object.entries(ENTITY_CONFIG).map(([key, val]) => ({ key: key as EntityType, label: val.label })),
+  ];
 
   const loadHistory = async () => {
     if (!currentAgreement) return;
@@ -80,24 +82,24 @@ const HistoryScreen: React.FC = () => {
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersScroll} contentContainerStyle={styles.filtersContent}>
-            {FILTER_OPTIONS.map((t) => {
-              const isActive = filter === t.key;
-              const chipColor = t.key === 'all' ? COLORS.primary : ENTITY_CONFIG[t.key].color;
+            {FILTER_OPTIONS.map((ft) => {
+              const isActive = filter === ft.key;
+              const chipColor = ft.key === 'all' ? COLORS.primary : ENTITY_CONFIG[ft.key].color;
               return (
                 <TouchableOpacity
-                  key={t.key}
+                  key={ft.key}
                   style={[styles.chip, isActive && { borderColor: chipColor, backgroundColor: chipColor + '10' }]}
-                  onPress={() => setFilter(t.key)}
+                  onPress={() => setFilter(ft.key)}
                 >
-                  {t.key !== 'all' && (
+                  {ft.key !== 'all' && (
                     <Ionicons
-                      name={ENTITY_CONFIG[t.key].icon}
+                      name={ENTITY_CONFIG[ft.key].icon}
                       size={14}
                       color={isActive ? chipColor : COLORS.textMuted}
                       style={styles.chipIcon}
                     />
                   )}
-                  <Text style={[styles.chipText, isActive && { color: chipColor, fontWeight: '600' }]}>{t.label}</Text>
+                  <Text style={[styles.chipText, isActive && { color: chipColor, fontWeight: '600' }]}>{ft.label}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -105,7 +107,7 @@ const HistoryScreen: React.FC = () => {
         }
         renderItem={renderEntry}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={<EmptyState message="Sin historial" icon="📜" />}
+        ListEmptyComponent={<EmptyState message={t('history.empty')} icon="time-outline" />}
       />
     </View>
   );

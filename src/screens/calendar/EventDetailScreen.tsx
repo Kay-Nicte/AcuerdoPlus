@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { calendarService } from '../../services/calendarService';
 import { minorService } from '../../services/minorService';
@@ -10,13 +11,16 @@ import { parsePatternRule, frequencyLabel } from '../../utils/patternExpander';
 import ApprovalBadge from '../../components/common/ApprovalBadge';
 import LoadingScreen from '../../components/common/LoadingScreen';
 import { COLORS, SPACING, FONT_SIZES } from '../../config/theme';
+import { useToast } from '../../context/ToastContext';
 
 const EventDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route, navigation }) => {
   const { eventId, patternInstance } = route.params;
   const isPatternInstance = !!patternInstance || eventId.includes('_');
   const realEventId = isPatternInstance ? eventId.split('_')[0] : eventId;
 
+  const { t } = useTranslation();
   const { user, userData } = useAuth();
+  const { showToast } = useToast();
   const [event, setEvent] = useState<CalendarEvent | null>(null);
   const [minorName, setMinorName] = useState('');
   const [assignedName, setAssignedName] = useState('');
@@ -56,12 +60,12 @@ const EventDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
       await calendarService.respondToEvent(event.id, user.uid, userData?.displayName || 'Usuario', approved, reason);
       loadData();
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      showToast(error.message, 'error');
     }
   };
 
   if (loading) return <LoadingScreen />;
-  if (!event) return <Text style={{ padding: SPACING.lg }}>Evento no encontrado</Text>;
+  if (!event) return <Text style={{ padding: SPACING.lg }}>{t('eventDetail.notFound')}</Text>;
 
   const canRespond = !isPatternInstance && event.approvalStatus === 'pending' && event.createdBy !== user?.uid;
 
@@ -74,19 +78,19 @@ const EventDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
 
       <View style={styles.infoCard}>
         <View style={styles.row}>
-          <Text style={styles.label}>Menor</Text>
+          <Text style={styles.label}>{t('eventDetail.minor')}</Text>
           <Text style={styles.value}>{minorName}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Inicio</Text>
+          <Text style={styles.label}>{t('eventDetail.start')}</Text>
           <Text style={styles.value}>{formatDate(event.startDate)}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Fin</Text>
+          <Text style={styles.label}>{t('eventDetail.end')}</Text>
           <Text style={styles.value}>{formatDate(event.endDate)}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Asignado a</Text>
+          <Text style={styles.label}>{t('eventDetail.assignedTo')}</Text>
           <Text style={styles.value}>{assignedName}</Text>
         </View>
         {(event.isPattern || isPatternInstance) && (() => {
@@ -94,16 +98,16 @@ const EventDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
           return (
             <>
               <View style={styles.row}>
-                <Text style={styles.label}>Tipo</Text>
+                <Text style={styles.label}>{t('eventDetail.type')}</Text>
                 <Text style={[styles.value, { color: COLORS.info }]}>
-                  {isPatternInstance ? 'Parte de patrón recurrente' : 'Patrón automático'}
+                  {isPatternInstance ? t('eventDetail.recurringPart') : t('eventDetail.autoPattern')}
                 </Text>
               </View>
               {rule && (
                 <View style={styles.row}>
-                  <Text style={styles.label}>Frecuencia</Text>
+                  <Text style={styles.label}>{t('eventDetail.frequency')}</Text>
                   <Text style={styles.value}>
-                    {frequencyLabel(rule.frequency)} — {rule.durationDays} días/turno
+                    {frequencyLabel(rule.frequency)} {t('eventDetail.daysPerTurn', { days: rule.durationDays })}
                   </Text>
                 </View>
               )}
@@ -114,14 +118,14 @@ const EventDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
 
       {event.rejectionReason && (
         <View style={styles.rejectionBox}>
-          <Text style={styles.rejectionLabel}>Motivo del rechazo:</Text>
+          <Text style={styles.rejectionLabel}>{t('eventDetail.rejectionReason')}</Text>
           <Text style={styles.rejectionText}>{event.rejectionReason}</Text>
         </View>
       )}
 
       {event.approvalExpiresAt && event.approvalStatus === 'pending' && (
         <Text style={styles.expiresText}>
-          Caduca el {formatDate(event.approvalExpiresAt)}
+          {t('eventDetail.expiresAt', { date: formatDate(event.approvalExpiresAt) })}
         </Text>
       )}
 
@@ -131,15 +135,15 @@ const EventDetailScreen: React.FC<{ route: any; navigation: any }> = ({ route, n
             style={styles.reasonInput}
             value={rejectReason}
             onChangeText={setRejectReason}
-            placeholder="Motivo del rechazo (opcional)"
+            placeholder={t('eventDetail.rejectionReasonOptional')}
             placeholderTextColor={COLORS.textMuted}
           />
           <View style={styles.actions}>
             <TouchableOpacity style={styles.approveButton} onPress={() => handleRespond(true)}>
-              <Text style={styles.approveText}>Aprobar</Text>
+              <Text style={styles.approveText}>{t('eventDetail.approve')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.rejectButton} onPress={() => handleRespond(false)}>
-              <Text style={styles.rejectText}>Rechazar</Text>
+              <Text style={styles.rejectText}>{t('eventDetail.reject')}</Text>
             </TouchableOpacity>
           </View>
         </>

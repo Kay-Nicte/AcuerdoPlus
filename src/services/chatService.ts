@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   setDoc,
+  getDoc,
   query,
   where,
   orderBy,
@@ -9,6 +10,7 @@ import {
   getDocs,
   updateDoc,
   arrayUnion,
+  arrayRemove,
   onSnapshot,
   Timestamp,
 } from 'firebase/firestore';
@@ -24,6 +26,12 @@ export const chatService = {
     message: string,
     memberUids?: string[]
   ): Promise<ChatMessage> {
+    // Check if chat is locked
+    const lockDoc = await getDoc(doc(db, 'chatLocks', agreementId));
+    if (lockDoc.exists() && lockDoc.data()?.lockedBy) {
+      throw new Error('El chat esta bloqueado');
+    }
+
     const msgRef = doc(collection(db, 'chatMessages'));
     const chatMessage: ChatMessage = {
       id: msgRef.id,
@@ -82,6 +90,40 @@ export const chatService = {
   async hideMessage(messageId: string, uid: string): Promise<void> {
     await updateDoc(doc(db, 'chatMessages', messageId), {
       hiddenFor: arrayUnion(uid),
+    });
+  },
+
+  // --- Chat lock/unlock ---
+  async lockChat(agreementId: string, uid: string): Promise<void> {
+    await setDoc(doc(db, 'chatLocks', agreementId), {
+      lockedBy: uid,
+      lockedAt: Timestamp.fromDate(new Date()),
+    });
+  },
+
+  async unlockChat(agreementId: string): Promise<void> {
+    await setDoc(doc(db, 'chatLocks', agreementId), {
+      lockedBy: null,
+      lockedAt: null,
+    });
+  },
+
+  async getChatLock(agreementId: string): Promise<{ lockedBy: string | null }> {
+    const lockDoc = await getDoc(doc(db, 'chatLocks', agreementId));
+    if (!lockDoc.exists()) return { lockedBy: null };
+    return { lockedBy: lockDoc.data()?.lockedBy || null };
+  },
+
+  subscribeToChatLock(
+    agreementId: string,
+    callback: (lockedBy: string | null) => void
+  ): () => void {
+    return onSnapshot(doc(db, 'chatLocks', agreementId), (snapshot) => {
+      if (!snapshot.exists()) {
+        callback(null);
+      } else {
+        callback(snapshot.data()?.lockedBy || null);
+      }
     });
   },
 

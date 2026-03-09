@@ -23,7 +23,7 @@ export const formatMonthLabel = (yearMonth: string): string => {
 };
 
 export const formatCurrency = (amount: number): string => {
-  return `${amount.toFixed(2)} \u20AC`;
+  return `${amount.toFixed(2).replace('.', ',')} \u20AC`;
 };
 
 export const formatDateTime = (date: Date): string => {

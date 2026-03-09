@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, FlatList, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { useAgreement } from '../../context/AgreementContext';
 import { calendarService } from '../../services/calendarService';
 import { CalendarEvent } from '../../types';
@@ -11,6 +12,7 @@ import { formatDateISO } from '../../utils/formatters';
 import { COLORS, SPACING, FONT_SIZES } from '../../config/theme';
 
 const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { t } = useTranslation();
   const { currentAgreement } = useAgreement();
   const [selectedDate, setSelectedDate] = useState(formatDateISO(new Date()));
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -72,7 +74,7 @@ const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         }}
       />
       <View style={styles.eventsSection}>
-        <Text style={styles.sectionTitle}>Eventos del dia</Text>
+        <Text style={styles.sectionTitle}>{t('calendar.dayEvents')}</Text>
         <FlatList
           data={events}
           keyExtractor={(item) => item.id}
@@ -91,7 +93,7 @@ const CalendarScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               });
             }} />
           )}
-          ListEmptyComponent={<EmptyState message="Sin eventos para este dia" icon="📅" />}
+          ListEmptyComponent={<EmptyState message={t('calendar.noEvents')} icon="calendar-outline" />}
           contentContainerStyle={styles.list}
         />
       </View>

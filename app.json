@@ -6,25 +6,36 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "scheme": "acuerdoplus",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.acuerdoplus.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "package": "com.acuerdoplus.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "@react-native-google-signin/google-signin",
+      "expo-web-browser",
+      "@react-native-community/datetimepicker",
+      "expo-localization"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4c19aa43-3b73-4809-be0c-88a05c57c1e2"
+      }
     }
   }
 }

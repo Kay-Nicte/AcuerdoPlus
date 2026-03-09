@@ -1,6 +1,8 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useCallback, useRef } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, FlatList, Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useAgreement } from '../../context/AgreementContext';
 import { minorService } from '../../services/minorService';
@@ -9,11 +11,14 @@ import { Minor, AppNotification } from '../../types';
 import { COLORS, SPACING, FONT_SIZES } from '../../config/theme';
 
 const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { t } = useTranslation();
   const { userData } = useAuth();
   const { currentAgreement } = useAgreement();
   const [minors, setMinors] = useState<Minor[]>([]);
+  const [activeMinorIndex, setActiveMinorIndex] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [recentNotifications, setRecentNotifications] = useState<AppNotification[]>([]);
+  const cardWidth = Dimensions.get('window').width - SPACING.lg * 2;
 
   useFocusEffect(
     useCallback(() => {
@@ -47,51 +52,106 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   };
 
   const modelLabels: Record<string, string> = {
-    fixed: 'Pensión fija',
-    shared: 'Gastos compartidos',
-    mixed: 'Mixto',
+    fixed: t('models.fixed'),
+    shared: t('models.shared'),
+    mixed: t('models.mixed'),
   };
 
   const custodyLabels: Record<string, string> = {
-    shared: 'Custodia compartida',
-    majority: 'Custodia mayoritaria',
-    exclusive: 'Custodia exclusiva',
+    shared: t('custodyTypes.shared'),
+    majority: t('custodyTypes.majority'),
+    exclusive: t('custodyTypes.exclusive'),
   };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.greeting}>Hola, {userData?.displayName}</Text>
-      <Text style={styles.subtitle}>Panel de tu acuerdo</Text>
+      <View style={styles.topRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.greeting}>{t('home.greeting', { name: userData?.displayName })}{userData?.showRelation && userData?.relationToMinor ? ` (${userData.relationToMinor})` : ''}</Text>
+        </View>
+        <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Settings')}>
+          <Ionicons name="person-circle-outline" size={36} color={COLORS.primary} />
+        </TouchableOpacity>
+      </View>
 
-      {currentAgreement && (
-        <View style={styles.infoCard}>
-          <Text style={styles.cardTitle}>Acuerdo</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Modelo económico:</Text>
-            <Text style={styles.value}>{modelLabels[currentAgreement.economicModel]}</Text>
-          </View>
-          {currentAgreement.custodyType && (
-            <View style={styles.infoRow}>
-              <Text style={styles.label}>Custodia:</Text>
-              <Text style={styles.value}>{custodyLabels[currentAgreement.custodyType]}</Text>
+      {currentAgreement && minors.length > 0 && (
+        <>
+          <FlatList
+            data={minors}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(e) => {
+              const index = Math.round(e.nativeEvent.contentOffset.x / cardWidth);
+              setActiveMinorIndex(index);
+            }}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item: minor }) => {
+              const model = minor.economicModel || currentAgreement.economicModel;
+              return (
+                <TouchableOpacity
+                  style={[styles.infoCard, { width: cardWidth }]}
+                  onPress={() => navigation.navigate('MinorDetail', { minorId: minor.id })}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.cardTitle}>{t('home.agreementName', { name: minor.name })}</Text>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.label}>{t('home.economicModel')}</Text>
+                    <Text style={styles.value}>{modelLabels[model]}</Text>
+                  </View>
+                  {minor.fixedAmount && (model === 'fixed' || model === 'mixed') && (
+                    <View style={styles.infoRow}>
+                      <Text style={styles.label}>{t('home.monthlyPension')}</Text>
+                      <Text style={styles.value}>{String(minor.fixedAmount).replace('.', ',')} EUR</Text>
+                    </View>
+                  )}
+                  {currentAgreement.custodyType && (
+                    <View style={styles.infoRow}>
+                      <Text style={styles.label}>{t('home.custody')}</Text>
+                      <Text style={styles.value}>{custodyLabels[currentAgreement.custodyType]}</Text>
+                    </View>
+                  )}
+                  <View style={styles.infoRow}>
+                    <Text style={styles.label}>{t('home.approvalMode')}</Text>
+                    <Text style={styles.value}>{currentAgreement.approvalMode ? t('common.enabled') : t('common.disabled')}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.label}>{t('home.members')}</Text>
+                    <Text style={styles.value}>{currentAgreement.members.length}/2</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            }}
+          />
+          {minors.length > 1 && (
+            <View style={styles.dotsContainer}>
+              {minors.map((_, i) => (
+                <View key={i} style={[styles.dot, i === activeMinorIndex && styles.dotActive]} />
+              ))}
             </View>
           )}
+        </>
+      )}
+
+      {currentAgreement && minors.length === 0 && (
+        <View style={styles.infoCard}>
+          <Text style={styles.cardTitle}>{t('home.agreement')}</Text>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Miembros:</Text>
-            <Text style={styles.value}>{currentAgreement.members.length}/2</Text>
+            <Text style={styles.label}>{t('home.economicModel')}</Text>
+            <Text style={styles.value}>{modelLabels[currentAgreement.economicModel]}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Modo aprobación:</Text>
-            <Text style={styles.value}>{currentAgreement.approvalMode ? 'Activado' : 'Desactivado'}</Text>
+            <Text style={styles.label}>{t('home.members')}</Text>
+            <Text style={styles.value}>{currentAgreement.members.length}/2</Text>
           </View>
         </View>
       )}
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Menores ({minors.length})</Text>
+          <Text style={styles.sectionTitle}>{t('home.minorsCount', { count: minors.length })}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('MinorList')}>
-            <Text style={styles.seeAll}>Ver todos</Text>
+            <Text style={styles.seeAll}>{t('common.seeAll')}</Text>
           </TouchableOpacity>
         </View>
         {minors.length === 0 ? (
@@ -99,7 +159,7 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             style={styles.emptyCard}
             onPress={() => navigation.navigate('AddMinor')}
           >
-            <Text style={styles.emptyText}>Añadir primer menor</Text>
+            <Text style={styles.emptyText}>{t('home.addFirstMinor')}</Text>
           </TouchableOpacity>
         ) : (
           minors.slice(0, 3).map((minor) => (
@@ -114,41 +174,41 @@ const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         )}
       </View>
 
-      <Text style={styles.sectionTitle}>Acciones rápidas</Text>
+      <Text style={styles.sectionTitle}>{t('home.quickActions')}</Text>
       <View style={styles.actionsGrid}>
         <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('AddMinor')}>
-          <Text style={styles.actionIcon}>+</Text>
-          <Text style={styles.actionLabel}>Añadir menor</Text>
+          <Ionicons name="person-add-outline" size={24} color={COLORS.primary} style={styles.actionIconStyle} />
+          <Text style={styles.actionLabel}>{t('home.addMinor')}</Text>
         </TouchableOpacity>
         {(currentAgreement?.economicModel === 'fixed' || currentAgreement?.economicModel === 'mixed') && (
           <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('MaintenanceList')}>
-            <Text style={styles.actionIcon}>$</Text>
-            <Text style={styles.actionLabel}>Manutención</Text>
+            <Ionicons name="wallet-outline" size={24} color={COLORS.primary} style={styles.actionIconStyle} />
+            <Text style={styles.actionLabel}>{t('home.maintenance')}</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('AuthorizationList')}>
-          <Text style={styles.actionIcon}>{'\u2713'}</Text>
-          <Text style={styles.actionLabel}>Autorizaciones</Text>
+          <Ionicons name="shield-checkmark-outline" size={24} color={COLORS.primary} style={styles.actionIconStyle} />
+          <Text style={styles.actionLabel}>{t('home.authorizations')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionCard} onPress={() => navigation.navigate('Notifications')}>
           <View>
-            <Text style={styles.actionIcon}>{'\uD83D\uDD14'}</Text>
+            <Ionicons name="notifications-outline" size={24} color={COLORS.primary} style={styles.actionIconStyle} />
             {unreadCount > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
               </View>
             )}
           </View>
-          <Text style={styles.actionLabel}>Notificaciones</Text>
+          <Text style={styles.actionLabel}>{t('home.notifications')}</Text>
         </TouchableOpacity>
       </View>
 
       {recentNotifications.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Notificaciones recientes</Text>
+            <Text style={styles.sectionTitle}>{t('home.recentNotifications')}</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
-              <Text style={styles.seeAll}>Ver todas</Text>
+              <Text style={styles.seeAll}>{t('common.seeAllFem')}</Text>
             </TouchableOpacity>
           </View>
           {recentNotifications.map((notif) => (
@@ -176,6 +236,14 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     paddingTop: 60,
   },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.lg,
+  },
+  profileButton: {
+    marginLeft: SPACING.sm,
+  },
   greeting: {
     fontSize: FONT_SIZES.xxl,
     fontWeight: 'bold',
@@ -184,13 +252,28 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: FONT_SIZES.md,
     color: COLORS.textSecondary,
-    marginBottom: SPACING.lg,
   },
   infoCard: {
     backgroundColor: COLORS.backgroundSecondary,
     borderRadius: 12,
     padding: SPACING.md,
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.sm,
+  },
+  dotsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: SPACING.xs,
+    marginBottom: SPACING.md,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.border,
+  },
+  dotActive: {
+    backgroundColor: COLORS.primary,
+    width: 20,
   },
   cardTitle: {
     fontSize: FONT_SIZES.lg,
@@ -271,9 +354,7 @@ const styles = StyleSheet.create({
     minWidth: 120,
     flex: 1,
   },
-  actionIcon: {
-    fontSize: 24,
-    color: COLORS.primary,
+  actionIconStyle: {
     marginBottom: SPACING.xs,
   },
   actionLabel: {

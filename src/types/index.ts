@@ -5,6 +5,7 @@ export interface User {
   displayName: string; // Nombre visible (Carmen, Álex, etc.)
   relationToMinor?: string; // madre, padre, tutor, etc.
   showRelation: boolean; // Si mostrar la relación junto al nombre
+  photoUrl?: string; // URL de la foto de perfil
   deactivatedAt?: Date; // Si la cuenta fue desactivada
   createdAt: Date;
 }
@@ -29,6 +30,10 @@ export interface Minor {
   agreementId: string;
   name: string;
   birthDate?: Date;
+  economicModel?: 'fixed' | 'shared' | 'mixed'; // Modelo economico individual (sobreescribe el del acuerdo)
+  fixedAmount?: number; // Cantidad de pension fija mensual
+  fixedPayerUid?: string; // UID de quien paga la pension
+  sharedSplit?: { [uid: string]: number }; // Porcentaje de reparto (ej: { uid1: 70, uid2: 30 })
   isActive: boolean; // Nunca se elimina, solo se marca inactivo
   addedBy: string; // UID del adulto que lo añadió
   createdAt: Date;

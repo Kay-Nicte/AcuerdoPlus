@@ -6,41 +6,47 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useAgreement } from '../../context/AgreementContext';
+import { useToast } from '../../context/ToastContext';
 import { notificationService } from '../../services/notificationService';
 import { AppNotification } from '../../types';
 import { COLORS, SPACING, FONT_SIZES } from '../../config/theme';
 
-const iconMap: Record<AppNotification['entityType'], string> = {
-  calendar: '\uD83D\uDCC5',
-  chat: '\uD83D\uDCAC',
-  maintenance: '\uD83D\uDCB0',
-  authorization: '\u2705',
-  expense: '\uD83D\uDCCB',
+const iconMap: Record<AppNotification['entityType'], keyof typeof Ionicons.glyphMap> = {
+  calendar: 'calendar',
+  chat: 'chatbubbles',
+  maintenance: 'wallet',
+  authorization: 'shield-checkmark',
+  expense: 'receipt',
 };
 
-const formatTimeAgo = (date: Date): string => {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return 'Ahora';
-  if (diffMin < 60) return `Hace ${diffMin} min`;
-  const diffHours = Math.floor(diffMin / 60);
-  if (diffHours < 24) return `Hace ${diffHours}h`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `Hace ${diffDays}d`;
-  return date.toLocaleDateString('es-ES');
-};
+// formatTimeAgo is now inside the component to access t()
 
 const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { t } = useTranslation();
   const { userData } = useAuth();
   const { currentAgreement } = useAgreement();
+  const { showToast } = useToast();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const formatTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return t('notif.now');
+    if (diffMin < 60) return t('notif.minutesAgo', { count: diffMin });
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return t('notif.hoursAgo', { count: diffHours });
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return t('notif.daysAgo', { count: diffDays });
+    return date.toLocaleDateString('es-ES');
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -98,7 +104,7 @@ const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       await notificationService.markAllAsRead(currentAgreement.id, userData.uid);
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch (error) {
-      Alert.alert('Error', 'No se pudieron marcar como leídas');
+      showToast('No se pudieron marcar como leídas', 'error');
     }
   };
 
@@ -109,7 +115,7 @@ const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       style={[styles.notifItem, !item.read && styles.notifUnread]}
       onPress={() => handleTap(item)}
     >
-      <Text style={styles.icon}>{iconMap[item.entityType]}</Text>
+      <Ionicons name={iconMap[item.entityType]} size={24} color={COLORS.primary} style={styles.iconStyle} />
       <View style={styles.notifContent}>
         <Text style={[styles.notifTitle, !item.read && styles.notifTitleUnread]}>
           {item.title}
@@ -135,7 +141,7 @@ const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     <View style={styles.container}>
       {hasUnread && (
         <TouchableOpacity style={styles.markAllBtn} onPress={handleMarkAllRead}>
-          <Text style={styles.markAllText}>Marcar todas como leídas</Text>
+          <Text style={styles.markAllText}>{t('notif.markAllRead')}</Text>
         </TouchableOpacity>
       )}
 
@@ -146,10 +152,10 @@ const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         contentContainerStyle={notifications.length === 0 ? styles.center : undefined}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>{'\uD83D\uDD14'}</Text>
-            <Text style={styles.emptyTitle}>Sin notificaciones</Text>
+            <Ionicons name="notifications-outline" size={48} color={COLORS.textMuted} />
+            <Text style={styles.emptyTitle}>{t('notif.empty')}</Text>
             <Text style={styles.emptySubtitle}>
-              Aquí aparecerán las actualizaciones de tu acuerdo
+              {t('notif.emptyDesc')}
             </Text>
           </View>
         }
@@ -188,8 +194,7 @@ const styles = StyleSheet.create({
   notifUnread: {
     backgroundColor: COLORS.primary + '08',
   },
-  icon: {
-    fontSize: 24,
+  iconStyle: {
     marginRight: SPACING.md,
   },
   notifContent: {
