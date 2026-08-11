@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { AppNotification } from '../types';
+import { pushService } from './pushService';
 
 export const notificationService = {
   async send(data: {
@@ -36,6 +37,8 @@ export const notificationService = {
         entityId: data.entityId,
         createdAt: Timestamp.fromDate(new Date()),
       });
+
+      await pushService.sendPushToUser(data.recipientUid, data.title, data.body);
     } catch (error: any) {
       console.error('Error sending notification:', error.message);
     }

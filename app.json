@@ -26,10 +26,24 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/4c19aa43-3b73-4809-be0c-88a05c57c1e2"
+    },
     "plugins": [
       "@react-native-google-signin/google-signin",
       "expo-web-browser",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-apple-authentication",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#A93D5C"
+        }
+      ]
     ],
     "extra": {
       "eas": {

@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -27,7 +28,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle, signInWithApple, isAppleSignInAvailable } = useAuth();
   const { showToast } = useToast();
 
   const handleLogin = async () => {
@@ -65,6 +66,17 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       await signInWithGoogle();
     } catch (error: any) {
       showToast(t('auth.googleError'), 'error');
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    try {
+      await signInWithApple();
+    } catch (error: any) {
+      if (error.code === 'ERR_REQUEST_CANCELED') {
+        return;
+      }
+      showToast(t('auth.appleError'), 'error');
     }
   };
 
@@ -134,6 +146,16 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.dividerText}>{t('common.or')}</Text>
           <View style={styles.dividerLine} />
         </View>
+
+        {isAppleSignInAvailable && (
+          <AppleAuthentication.AppleAuthenticationButton
+            buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+            cornerRadius={8}
+            style={styles.appleButton}
+            onPress={handleAppleLogin}
+          />
+        )}
 
         <TouchableOpacity
           style={styles.googleButton}
@@ -251,9 +273,15 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 14,
   },
+  appleButton: {
+    width: '100%',
+    height: 54,
+    marginBottom: 12,
+  },
   googleButton: {
     backgroundColor: '#fff',
-    padding: 16,
+    height: 54,
+    justifyContent: 'center',
     borderRadius: 8,
     alignItems: 'center',
     borderWidth: 1,

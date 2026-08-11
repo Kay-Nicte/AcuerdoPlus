@@ -22,6 +22,7 @@ const ChatScreen: React.FC = () => {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [lockedBy, setLockedBy] = useState<string | null>(null);
+  const [muteStatus, setMuteStatus] = useState<{ muted: boolean; mutedUntil: Date | null; mutedForever: boolean }>({ muted: false, mutedUntil: null, mutedForever: false });
   const [memberProfiles, setMemberProfiles] = useState<{ [uid: string]: { displayName: string; showRelation?: boolean; relationToMinor?: string } }>({});
   const flatListRef = useRef<FlatList>(null);
 
@@ -50,9 +51,14 @@ const ChatScreen: React.FC = () => {
       setLockedBy(locked);
     });
 
+    const unsubMute = user
+      ? chatService.subscribeToMuteStatus(currentAgreement.id, user.uid, setMuteStatus)
+      : undefined;
+
     return () => {
       unsubMessages();
       unsubLock();
+      unsubMute?.();
     };
   }, [currentAgreement, user]);
 
@@ -127,6 +133,50 @@ const ChatScreen: React.FC = () => {
     }
   };
 
+  const handleToggleMute = () => {
+    if (!currentAgreement || !user) return;
+
+    if (muteStatus.muted) {
+      const untilLabel = muteStatus.mutedForever
+        ? t('chat.mutedForever')
+        : t('chat.mutedUntil', { date: muteStatus.mutedUntil?.toLocaleString() });
+
+      showConfirm(
+        t('chat.unmuteChat'),
+        `${untilLabel}\n\n${t('chat.unmuteChatConfirm')}`,
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('chat.unmute'),
+            onPress: () => chatService.unmuteChat(currentAgreement.id, user.uid),
+          },
+        ]
+      );
+      return;
+    }
+
+    showConfirm(
+      t('chat.muteChat'),
+      t('chat.muteChatDescription'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('chat.mute8h'),
+          onPress: () => chatService.muteChat(currentAgreement.id, user.uid, '8h'),
+        },
+        {
+          text: t('chat.mute7d'),
+          onPress: () => chatService.muteChat(currentAgreement.id, user.uid, '7d'),
+        },
+        {
+          text: t('chat.muteForever'),
+          style: 'destructive',
+          onPress: () => chatService.muteChat(currentAgreement.id, user.uid, 'forever'),
+        },
+      ]
+    );
+  };
+
   const isLocked = !!lockedBy;
 
   return (
@@ -141,6 +191,18 @@ const ChatScreen: React.FC = () => {
           <Ionicons name="lock-closed" size={16} color={COLORS.warning} />
           <Text style={styles.lockText}>
             {lockedBy === user?.uid ? t('chat.chatLockedByYou') : t('chat.chatLocked')}
+          </Text>
+        </View>
+      )}
+
+      {/* Mute banner */}
+      {muteStatus.muted && (
+        <View style={styles.lockBanner}>
+          <Ionicons name="notifications-off" size={16} color={COLORS.warning} />
+          <Text style={styles.lockText}>
+            {muteStatus.mutedForever
+              ? t('chat.mutedForever')
+              : t('chat.mutedUntil', { date: muteStatus.mutedUntil?.toLocaleString() })}
           </Text>
         </View>
       )}
@@ -194,6 +256,14 @@ const ChatScreen: React.FC = () => {
       />
 
       <View style={styles.inputBar}>
+        <TouchableOpacity onPress={handleToggleMute} style={styles.lockButton}>
+          <Ionicons
+            name={muteStatus.muted ? 'notifications-off' : 'notifications-outline'}
+            size={20}
+            color={muteStatus.muted ? COLORS.warning : COLORS.textMuted}
+          />
+        </TouchableOpacity>
+
         <TouchableOpacity onPress={handleToggleLock} style={styles.lockButton}>
           <Ionicons
             name={isLocked ? 'lock-closed' : 'lock-open-outline'}

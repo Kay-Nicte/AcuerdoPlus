@@ -6,6 +6,7 @@ export interface User {
   relationToMinor?: string; // madre, padre, tutor, etc.
   showRelation: boolean; // Si mostrar la relación junto al nombre
   photoUrl?: string; // URL de la foto de perfil
+  pushToken?: string; // Token de Expo Push para notificaciones
   deactivatedAt?: Date; // Si la cuenta fue desactivada
   createdAt: Date;
 }

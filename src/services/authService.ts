@@ -6,6 +6,7 @@ import {
   updateProfile,
   sendPasswordResetEmail,
   GoogleAuthProvider,
+  OAuthProvider,
   User as FirebaseUser
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
@@ -61,6 +62,40 @@ export const authService = {
           uid: firebaseUser.uid,
           email: firebaseUser.email!,
           displayName: firebaseUser.displayName || 'Usuario',
+          showRelation: false,
+          createdAt: new Date(),
+        };
+        await setDoc(doc(db, 'users', firebaseUser.uid), {
+          ...userData,
+          createdAt: Timestamp.fromDate(userData.createdAt),
+        });
+      }
+
+      return firebaseUser;
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  },
+
+  async loginWithApple(identityToken: string, nonce: string, fullName?: { givenName?: string | null; familyName?: string | null }): Promise<FirebaseUser> {
+    try {
+      const provider = new OAuthProvider('apple.com');
+      const credential = provider.credential({ idToken: identityToken, rawNonce: nonce });
+      const userCredential = await signInWithCredential(auth, credential);
+      const firebaseUser = userCredential.user;
+
+      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+
+      if (!userDoc.exists()) {
+        const displayName =
+          firebaseUser.displayName ||
+          [fullName?.givenName, fullName?.familyName].filter(Boolean).join(' ').trim() ||
+          'Usuario';
+
+        const userData: User = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email!,
+          displayName,
           showRelation: false,
           createdAt: new Date(),
         };

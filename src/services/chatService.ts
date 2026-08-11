@@ -51,6 +51,11 @@ export const chatService = {
     if (memberUids) {
       const recipientUid = memberUids.find((uid) => uid !== senderUid);
       if (recipientUid) {
+        const muteStatus = await this.getMuteStatus(agreementId, recipientUid);
+        if (muteStatus.muted) {
+          return chatMessage;
+        }
+
         await notificationService.send({
           agreementId,
           recipientUid,
@@ -124,6 +129,62 @@ export const chatService = {
       } else {
         callback(snapshot.data()?.lockedBy || null);
       }
+    });
+  },
+
+  // --- Mute chat notifications ---
+  async muteChat(agreementId: string, uid: string, duration: '8h' | '7d' | 'forever'): Promise<void> {
+    let mutedUntil: Date | null = null;
+    if (duration === '8h') {
+      mutedUntil = new Date(Date.now() + 8 * 60 * 60 * 1000);
+    } else if (duration === '7d') {
+      mutedUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    }
+
+    await setDoc(doc(db, 'chatMutes', `${agreementId}_${uid}`), {
+      agreementId,
+      uid,
+      mutedForever: duration === 'forever',
+      mutedUntil: mutedUntil ? Timestamp.fromDate(mutedUntil) : null,
+    });
+  },
+
+  async unmuteChat(agreementId: string, uid: string): Promise<void> {
+    await setDoc(doc(db, 'chatMutes', `${agreementId}_${uid}`), {
+      agreementId,
+      uid,
+      mutedForever: false,
+      mutedUntil: null,
+    });
+  },
+
+  async getMuteStatus(agreementId: string, uid: string): Promise<{ muted: boolean; mutedUntil: Date | null; mutedForever: boolean }> {
+    const muteDoc = await getDoc(doc(db, 'chatMutes', `${agreementId}_${uid}`));
+    if (!muteDoc.exists()) return { muted: false, mutedUntil: null, mutedForever: false };
+
+    const data = muteDoc.data();
+    const mutedForever = !!data.mutedForever;
+    const mutedUntil = data.mutedUntil?.toDate?.() ?? null;
+    const muted = mutedForever || (mutedUntil ? mutedUntil > new Date() : false);
+
+    return { muted, mutedUntil, mutedForever };
+  },
+
+  subscribeToMuteStatus(
+    agreementId: string,
+    uid: string,
+    callback: (status: { muted: boolean; mutedUntil: Date | null; mutedForever: boolean }) => void
+  ): () => void {
+    return onSnapshot(doc(db, 'chatMutes', `${agreementId}_${uid}`), (snapshot) => {
+      if (!snapshot.exists()) {
+        callback({ muted: false, mutedUntil: null, mutedForever: false });
+        return;
+      }
+      const data = snapshot.data();
+      const mutedForever = !!data.mutedForever;
+      const mutedUntil = data.mutedUntil?.toDate?.() ?? null;
+      const muted = mutedForever || (mutedUntil ? mutedUntil > new Date() : false);
+      callback({ muted, mutedUntil, mutedForever });
     });
   },
 

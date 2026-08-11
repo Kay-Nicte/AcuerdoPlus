@@ -3,8 +3,12 @@ import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { User } from '../types';
 import { authService } from '../services/authService';
+import { pushService } from '../services/pushService';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
+import { Platform } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -15,6 +19,8 @@ interface AuthContextData {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
+  isAppleSignInAvailable: boolean;
   signOut: () => Promise<void>;
   refreshUserData: () => Promise<void>;
   deactivateAccount: () => Promise<void>;
@@ -29,11 +35,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userData, setUserData] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAppleSignInAvailable, setIsAppleSignInAvailable] = useState(false);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId: GOOGLE_WEB_CLIENT_ID,
     androidClientId: GOOGLE_ANDROID_CLIENT_ID,
   });
+
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      AppleAuthentication.isAvailableAsync().then(setIsAppleSignInAvailable);
+    }
+  }, []);
 
   useEffect(() => {
     if (response?.type === 'success') {
@@ -62,6 +75,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return;
           }
           setUserData(data);
+          pushService.registerForPushNotifications(firebaseUser.uid).catch((error) => {
+            console.error('Error registrando push token:', error);
+          });
         } catch (error) {
           console.error('Error cargando datos de usuario:', error);
           setUserData(null);
@@ -96,6 +112,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await promptAsync();
   };
 
+  const signInWithApple = async () => {
+    const nonce = Math.random().toString(36).substring(2, 15);
+    const hashedNonce = await Crypto.digestStringAsync(
+      Crypto.CryptoDigestAlgorithm.SHA256,
+      nonce
+    );
+
+    const credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+      nonce: hashedNonce,
+    });
+
+    if (!credential.identityToken) {
+      throw new Error('No se recibió el token de Apple');
+    }
+
+    await authService.loginWithApple(credential.identityToken, nonce, {
+      givenName: credential.fullName?.givenName,
+      familyName: credential.fullName?.familyName,
+    });
+  };
+
   const refreshUserData = async () => {
     if (user) {
       try {
@@ -126,6 +167,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signIn,
         signUp,
         signInWithGoogle,
+        signInWithApple,
+        isAppleSignInAvailable,
         signOut,
         refreshUserData,
         deactivateAccount,
